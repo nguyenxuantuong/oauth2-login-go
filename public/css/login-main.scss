@@ -1,0 +1,21 @@
+//main file which including every other files
+@import 'sass/global/_variables';
+@import "sass/global/components";
+@import "sass/global/plugins";
+@import "sass/global/components/_mixins";
+@import "sass/bootstrap/mixins";
+
+@import "./../modules/login/login";
+
+$brand-primary:         #f16a38 !default;
+
+.primary-text
+{
+  color: #1d1d1d !important;
+}
+
+.btn-main {
+  font-weight: 600;
+  padding: 10px 20px !important;
+  @include button-variant($btn-primary-color, #f16a38, darken(#f16a38, 5%));
+}

@@ -1,0 +1,6 @@
+test-results/
+app/tmp/
+app/routes/
+public/node_modules
+public/vendor
+public/.sass-cache

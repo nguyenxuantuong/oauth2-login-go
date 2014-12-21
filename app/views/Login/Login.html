@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700&subset=all" rel="stylesheet" type="text/css"/>
+    <link href="/public/vendor/metro/global/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+    <link href="/public/vendor/metro/global/plugins/simple-line-icons/simple-line-icons.min.css" rel="stylesheet" type="text/css"/>
+    <link href="/public/vendor/metro/global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <link href="/public/vendor/metro/global/plugins/uniform/css/uniform.default.css" rel="stylesheet" type="text/css"/>
+    <!-- END GLOBAL MANDATORY STYLES -->
+    
+    <!-- BEGIN PAGE LEVEL STYLES -->
+    <link href="/public/css/login-main.css" rel="stylesheet" type="text/css"/>
+    <!-- END PAGE LEVEL SCRIPTS -->
+    
+    <!-- BEGIN THEME STYLES -->
+    <link href="/public/vendor/metro/global/css/components.css" rel="stylesheet" type="text/css"/>
+    <link href="/public/vendor/metro/global/css/plugins.css" rel="stylesheet" type="text/css"/>
+    <link href="/public/vendor/metro/admin/layout/css/layout.css" rel="stylesheet" type="text/css"/>
+    <link href="/public/vendor/metro/admin/layout3/css/themes/yellow-orange.css" rel="stylesheet" type="text/css" id="style_color">
+    <link href="/public/vendor/metro/admin/layout/css/custom.css" rel="stylesheet" type="text/css"/>
+    
+    <!-- END THEME STYLES -->
+    <link rel="shortcut icon" href="favicon.ico"/>
+    
+    <!--main API endpoint to be used in client code-->
+    <script>
+        APIEndpointURL = "http://localhost:8888";
+    </script>
+</head>
+
+<body class="login" ng-controller="mainCtrl" ng-app="mainApp">
+    <!-- BEGIN LOGO -->
+    <div class="logo login-logo">
+        <a href="#">
+            <!--<img src="/images/main-logo.png" alt="Main logo"/>-->
+        </a>
+    </div>
+    <!-- END LOGO -->
+    
+    <!-- BEGIN LOGIN -->
+    <div class="content">
+        <div ui-view></div>
+    </div>
+
+    <div class="copyright">
+        <div style="margin-bottom: 10px;">
+            <a>Privacy</a>
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            <a href="#">Terms</a>
+        </div>
+        © 2014 Auth
+    </div>
+
+
+    <!-- BEGIN CORE PLUGINS -->
+    <!--[if lt IE 9]>
+    <script src="/public/vendor/metro/global/plugins/respond.min.js"></script>
+    <script src="/public/vendor/metro/global/plugins/excanvas.min.js"></script>
+    <![endif]-->
+    <script src="/public/vendor/metro/global/plugins/jquery.min.js" type="text/javascript"></script>
+    <script src="/public/vendor/metro/global/plugins/jquery-migrate.min.js" type="text/javascript"></script>
+    <script src="/public/vendor/metro/global/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="/public/vendor/metro/global/plugins/jquery.blockui.min.js" type="text/javascript"></script>
+    <script src="/public/vendor/metro/global/plugins/uniform/jquery.uniform.min.js" type="text/javascript"></script>
+    <!-- END CORE PLUGINS -->
+    <!-- BEGIN PAGE LEVEL PLUGINS -->
+    <script src="/public/vendor/metro/global/plugins/jquery-validation/js/jquery.validate.min.js" type="text/javascript"></script>
+    <!-- END PAGE LEVEL PLUGINS -->
+    <!-- BEGIN PAGE LEVEL SCRIPTS -->
+    <script src="/public/vendor/metro/global/scripts/metronic.js" type="text/javascript"></script>
+    <script src="/public/vendor/metro/admin/layout/scripts/layout.js" type="text/javascript"></script>
+    <script src="/public/vendor/metro/admin/pages/scripts/login.js" type="text/javascript"></script>
+    
+    <script src="/public/vendor/plugins/bootbox.min.js"></script>
+
+    <script src="/public/vendor/angular/angular.js"></script>
+    <script src="/public/vendor/angular-facebook/lib/angular-facebook.js"></script>
+    <script src="/public/vendor/angular-google-plus/dist/angular-google-plus.js"></script>
+    <script src="/public/vendor/angular-resource/angular-resource.js"></script>
+    <script src="/public/vendor/angular-strap/dist/angular-strap.js"></script>
+    <script src="/public/vendor/angular-strap/dist/angular-strap.tpl.js"></script>
+    <script src="/public/vendor/angular-bootstrap/ui-bootstrap.js"></script>
+    <script src="/public/vendor/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+    <script src="/public/vendor/angular-classy/angular-classy.js"></script>
+    <script src="/public/vendor/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+    <script src="/public/vendor/angular-ui-router/release/angular-ui-router.js"></script>
+    <script src="/public/vendor/angular-ui-utils/ui-utils.js"></script>
+    <script src="/public/vendor/angular-cookies/angular-cookies.js"></script>
+
+    <!--some sugar util function-->
+    <script src="/public/js/common.js"></script>
+    <script src="/public/js/md5.js"></script>
+
+    <!--main login files-->
+    <script src="/public/modules/login/login.js"></script>
+    <script src="/public/modules/login/loginApp.js"></script>
+</body>
+</html>

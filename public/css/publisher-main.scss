@@ -1,0 +1,365 @@
+//$brand-primary:         #F2784B !default;
+$brand-primary:         #f16a38 !default;
+
+@import 'sass/global/_variables';
+@import "sass/global/components/_mixins";
+@import "sass/admin/layout3/layout";
+@import "sass/custom/main-theme";
+@import "sass/admin/layout3/themes/base";
+
+
+.page-logo
+{
+  img
+  {
+    width: 200px;
+    margin-top: 20px;
+  }
+}
+
+.feeds li.notification
+{
+  cursor: pointer;
+}
+
+.form-actions, .form-body
+{
+  .btn
+  {
+    border-radius: 4px !important;
+  }
+
+  .input-group-btn
+  {
+    .btn
+    {
+      border-radius: 0px !important;
+    }
+  }
+}
+
+.label
+{
+
+}
+
+.required-label:before
+{
+  color: #f00;
+  content: "*";
+}
+
+.page-prefooter
+{
+  background: #CECECE !important;
+}
+
+.shelfie-template-img
+{
+  width: 100%;
+}
+
+.btn.btn-default.green.btn-circle
+{
+  color: white !important;
+}
+
+.noEntry
+{
+  text-align: center;
+  font-weight: bold;
+  min-height: 300px;
+  line-height: 300px;
+  font-size: 17px;
+}
+
+.recent-item-table-wrapper
+{
+  table
+  {
+    tr
+    {
+      th, td
+      {
+        text-align: center;
+      }
+    }
+  }
+}
+
+.page-toolbar {
+  .btn-theme-panel
+  {
+    font-size: 14px;
+    color: #f16a38;
+    cursor: pointer;
+
+    &:hover
+    {
+      opacity: 0.7;
+    }
+  }
+
+  .fa.fa-cloud-upload
+  {
+    font-size: 21px;
+  }
+}
+
+.page-content
+{
+  min-height: 1000px;
+
+  &.dashboard
+  {
+    .notification
+    {
+      .scroller
+      {
+        overflow-y: scroll;
+      }
+    }
+
+    .tab-content
+    {
+      .percentage
+      {
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+//for display date picker in modal
+#ui-datepicker-div
+{
+  z-index: 10404 !important;
+}
+
+.recent-item-table-wrapper
+{
+  height: 300px;
+  overflow-y: scroll;
+}
+
+.top5 { margin-top:5px; }
+.top7 { margin-top:7px; }
+.top10 { margin-top:10px; }
+.top15 { margin-top:15px; }
+.top17 { margin-top:17px; }
+.top30 { margin-top:30px; }
+
+.fa-spin
+{
+  color: $brand-primary;
+}
+
+.fa.fa-upload
+{
+  color: $brand-primary;
+}
+
+.select2-container {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.page-prefooter {
+  .subscribe-form {
+    .btn.green {
+      @include button-variant(#fff, lighten(#35aa47, 3%), "");
+    }
+  }
+}
+
+.input-group-btn
+{
+  & > .btn.default
+  {
+    height: 34px;
+  }
+}
+
+.portlet-title
+{
+  > .caption
+  {
+    color: $brand-primary !important;
+
+    > i
+    {
+      color: $brand-primary !important;
+    }
+  }
+}
+
+.align-center
+{
+  text-align: center;
+}
+
+.page-prefooter
+{
+  h2
+  {
+    color: white;
+  }
+
+  .subscribe-form
+  {
+    .form-control
+    {
+      background: white;
+      border-color: $brand-main-color;
+      border-right: none;
+      @include placeholder(lighten(black, 2%));
+    }
+
+    .btn {
+      @include button-variant(#fff, lighten(#58b8a9, 3%), "");
+    }
+  }
+
+  .social-icons li
+  {
+    opacity: 1;
+
+    > a
+    {
+      background-position: 0 -38px;
+    }
+  }
+
+  a
+  {
+    color: #444;
+  }
+}
+
+.page-content.content-inner-page
+{
+  min-height: 850px;
+}
+
+//override the component style
+.switch-ios.switch-light a
+{
+  border-radius: 100% !important;
+}
+
+@media (max-width: 500px) {
+  .page-logo
+  {
+    display: none !important;
+  }
+}
+
+//upload zone
+.upload-zone
+{
+  margin: 11px auto 20px;
+  height: 100px;
+  border-radius: 3px;
+  background: #fff;
+  border: 2px dashed #c8c8c8;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+  text-align: center;
+
+  &.exist-item
+  {
+    border: 2px solid #ccc;
+  }
+
+  .main-message
+  {
+    margin-top: 20px;
+  }
+
+  .glyphicon.glyphicon-cloud,
+  .fa.fa-upload
+  {
+    line-height: 94px;
+    font-size: 68px;
+    margin-left: -10px;
+
+    &.small-icon-upload-block
+    {
+      position: absolute;
+      right: 10px;
+      font-size: 25px;
+      line-height: normal;
+      margin-left: auto;
+    }
+  }
+}
+
+
+.upload-block-item-thumb
+{
+  max-height: 95px;
+  height: 95px;
+
+  float: left;
+  img
+  {
+    max-height: 95px;
+  }
+
+  .ribbon
+  {
+    padding: 2px 5px;
+    border-radius: 4px;
+    position: absolute;
+    bottom: 2px;
+    font-size: 13px;
+    color: white;
+
+    &.published
+    {
+      background: #53d76a;
+      left: 13px;
+    }
+
+    &.on-scheduled
+    {
+      background: #ffcc00;
+      left: 2px;
+    }
+
+    &.not-published
+    {
+      background: #ff5064;
+      color: white;
+      left: 2px;
+    }
+  }
+}
+
+.switch-light
+{
+  display: inline-block;
+  margin-left: 10px;
+  margin-bottom: -10px;
+
+  & > span:before
+  {
+    height: 30px !important;
+  }
+}
+
+
+.progress-block
+{
+  border: 1px solid #e3e3e3;
+  box-sizing: border-box;
+  padding: 10px 20px;
+  margin-top: 10px;
+}
+
+//inline date icon
+.form-control.date-picker
+{
+  width: auto;
+  display: inline-block !important;
+}
