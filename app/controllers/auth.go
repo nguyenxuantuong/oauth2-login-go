@@ -21,7 +21,7 @@ func (c Auth) Register() revel.Result {
 	//unmarshal the request
 	newUser := models.User{}
 	err := json.NewDecoder(c.Request.Body).Decode(&newUser)
-	revel.INFO.Printf("new decoded user %+v", newUser);
+
 	if err != nil {
 		c.RenderJsonError("Invalid post data. It is not in JSON format.")
 	}
@@ -74,17 +74,16 @@ func (c Auth) Login() revel.Result {
 		return c.RenderJsonSuccess(sessionUser)
 	}
 	
-	var f interface{}
+	//prefer to use model + json decode because it's enable mapping case insensitive
+	var requestUser = models.User{}
 
-	if err := json.NewDecoder(c.Request.Body).Decode(&f); err != nil {
+	if err := json.NewDecoder(c.Request.Body).Decode(&requestUser); err != nil {
 		return c.RenderJsonError("Invalid post data. It is not in proper JSON format")
 	}
 
-	m := f.(map[string]interface{})
-
 	//verify password and email exist in post data
-	c.Validation.Required(m["Email"])
-	c.Validation.Required(m["Password"])
+	c.Validation.Required(requestUser.Email)
+	c.Validation.Required(requestUser.Password)
 	
 	if c.Validation.HasErrors() {
 		return c.RenderJsonError("Missing required parameters email or password");
@@ -92,12 +91,12 @@ func (c Auth) Login() revel.Result {
 	
 	//otherwise check again database to find the user
 	user := models.User{}
-	if Gdb.Where("email = ?", m["Email"]).First(&user).RecordNotFound() {
+	if Gdb.Where("email = ?", requestUser.Email).First(&user).RecordNotFound() {
 		return c.RenderJsonError("User with email " + user.Email + " does not exist" );
 	}
 
 	//compare password to validate the user
-	if err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(m["Password"].(string))); err != nil {
+	if err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(requestUser.Password)); err != nil {
 		return c.RenderJsonError("Unable to login. Passwords are miss-match");
 	}
 

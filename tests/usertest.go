@@ -55,14 +55,13 @@ func (t *UserTest) TestUserRegister() {
 	}
 
 	endpoint, _ := revel.Config.String("http.endpoint")
-	
-	request := gorequest.New()
-	_, body, _ := request.Post(endpoint + "/api/user/register").Send(newUser).End()
 
-	//decode the body
+	_, body, _ := gorequest.New().Post(endpoint + "/api/user/register").Send(newUser).End()
+
+	//decode the body -- tag is optional because json-decoder able to deal with lowercase
 	type UserResponse struct{
-		Status string
-		Data   *models.User
+		Status string `json:"status"`
+		Data   *models.User `json:"data"`
 	}
 
 	jsonResponse := UserResponse{}
@@ -86,15 +85,38 @@ func (t *UserTest) TestUserRegister() {
 	t.AssertEqual(bcrypt.CompareHashAndPassword(users[0].HashedPassword, []byte(newUser.Password)), nil)
 }
 
+//test user login (register + login)
 func (t *UserTest) TestUserLogin(){
+	newUser := models.User{
+		FullName: "Nguyen Xuan Tuong",
+		Email: "nguy0066@e.ntu.edu.sg",
+		UserName: "nguy0066",
+		Password: utils.GetMD5Hash("111111"),
+	}
+
+	type UserResponse struct{
+		Status string `json:"status"`
+		Data   *models.User `json:"data"`
+	}
+	
+	//register user
 	endpoint, _ := revel.Config.String("http.endpoint")
+
+	_, body, _ := gorequest.New().Post(endpoint + "/api/user/register").Send(newUser).End()
+
+	jsonResponse := UserResponse{}
+	json.Unmarshal([]byte(body), &jsonResponse)
+	t.AssertEqual(jsonResponse.Data.FullName, newUser.FullName)
 	
-	_, body, _ := gorequest.New().Post(endpoint + "/api/user/login").
-	Set("Email","nguy0066@e.ntu.edu.sg").
-	Set("Password", utils.GetMD5Hash("111111")).
+	//then login using the same credential
+	_, body, _ = gorequest.New().Post(endpoint + "/api/user/login").
+	Send(`{"Email":"nguy0066@e.ntu.edu.sg"}`).
+	Send(`{"Password":"` + newUser.Password +`"}`).
 	End()
-	
-	var _ = body
+
+	//unmarshal the response
+	json.Unmarshal([]byte(body), &jsonResponse)
+	t.AssertEqual(jsonResponse.Data.FullName, newUser.FullName)
 }
 
 func (t *UserTest) After() {
