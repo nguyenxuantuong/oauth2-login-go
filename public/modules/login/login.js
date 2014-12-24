@@ -103,8 +103,8 @@ loginApp.controller("LoginController", ['$rootScope', '$scope', '$q', '$http', '
         }, 1300);
         
         $http.post("/api/user/login", {
-            Email: $scope.userInput.email,
-            Password: CryptoJS.MD5($scope.userInput.password).toString()})
+            email: $scope.userInput.email,
+            password: CryptoJS.MD5($scope.userInput.password).toString()})
             .success(function(response) {
                 var data = response;
 
@@ -212,10 +212,10 @@ loginApp.controller("RegisterController", ['$rootScope', '$scope', '$q', '$http'
     {
         var that = this;
         $http.post("/api/user/register",{
-            FullName: $scope.userInput.fullname,
-            UserName: $scope.userInput.username,
-            Email: $scope.userInput.email,
-            Password: CryptoJS.MD5($scope.userInput.password).toString()
+            full_name: $scope.userInput.fullname,
+            user_name: $scope.userInput.username,
+            email: $scope.userInput.email,
+            password: CryptoJS.MD5($scope.userInput.password).toString()
         })
             .success(function(response, status) {
                 var data = response;

@@ -1,18 +1,15 @@
-# Welcome to Revel
+# Welcome to Auth
 
 ## Getting Started
 
-A high-productivity web framework for the [Go language](http://www.golang.org/).
+Auth is based on Revel -- A high-productivity web framework for the [Go language](http://www.golang.org/).
 
 ### Start the web server:
 
-    revel run myapp
+    revel run auth
 
-   Run with <tt>--help</tt> for options.
-
-### Go to http://localhost:9000/ and you'll see:
-
-"It works"
+### Run test
+    revel test auth test (TestSuite -- optional)
 
 ### Description of Contents
 
@@ -61,15 +58,3 @@ test
 
     Tests are kept in the tests directory. Revel provides a testing framework that makes it easy to write and run functional tests against your application.
 
-### Follow the guidelines to start developing your application:
-
-* The README file created within your application.
-* The [Getting Started with Revel](http://revel.github.io/tutorial/index.html).
-* The [Revel guides](http://revel.github.io/manual/index.html).
-* The [Revel sample apps](http://revel.github.io/samples/index.html).
-* The [API documentation](http://revel.github.io/docs/godoc/index.html).
-
-## Contributing
-We encourage you to contribute to Revel! Please check out the [Contributing to Revel
-guide](https://github.com/revel/revel/blob/master/CONTRIBUTING.md) for guidelines about how
-to proceed. [Join us](https://groups.google.com/forum/#!forum/revel-framework)!

@@ -94,7 +94,7 @@ func (t *UserTest) TestUserLogin(){
 	Set("Password", utils.GetMD5Hash("111111")).
 	End()
 	
-	fmt.Printf("get body", body)
+	var _ = body
 }
 
 func (t *UserTest) After() {

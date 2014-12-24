@@ -2,9 +2,6 @@ package controllers
 
 import (
 	"github.com/revel/revel"
-//	"auth/app/models"
-//	"encoding/json"
-//	"code.google.com/p/go.crypto/bcrypt"
 )
 
 type App struct {
@@ -13,9 +10,9 @@ type App struct {
 
 //interface for API response
 type Response struct {
-	Status string
-	Data   interface{}
-	Errors	interface {}
+	Status string `json:"status"`
+	Data   interface{} `json:"data"`
+	Errors	interface {} `json:"errors"`
 }
 
 //index path

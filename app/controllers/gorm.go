@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"strings"
 	"fmt"
+	"time"
 )
 
 // type: revel controller with `*gorm.DB`
@@ -40,6 +41,22 @@ func getParamString(param string, defaultValue string) string {
 		}
 	}
 	return p
+}
+
+func (c GormController) getSessionExpire() time.Duration {
+	var expireAfterDuration time.Duration
+	
+	//keep the expire duration key
+	var err error
+	if expiresString, ok := r.Config.String("session.expires"); !ok {
+		expireAfterDuration = 30 * 24 * time.Hour
+	} else if expiresString == "session" {
+		expireAfterDuration = 0
+	} else if expireAfterDuration, err = time.ParseDuration(expiresString); err != nil {
+		panic(fmt.Errorf("session.expires invalid: %s", err))
+	}
+	
+	return expireAfterDuration
 }
 
 func getConnectionString() string {

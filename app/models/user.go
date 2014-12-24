@@ -6,19 +6,25 @@ import (
 	"regexp"
 )
 
-type User struct {
-	Id           	int64
-	UserName 	 	string  `sql:"size:50"`
-	Email 		 	string  `sql:"size:50"`
-	Password 		string  `sql:"size:50"`
-	HashedPassword  []byte
-	FullName        string  `sql:"size:255"`
-	LastLogin    	time.Time
-	CreatedDate    	time.Time
-	UpdatedDate    	time.Time
-	DeletedDate    	time.Time
-}
+const (
+	USER_INACTIVE = 0
+	USER_ACTIVE = 1
+	USER_SUSPEND = 2
+)
 
+type User struct {
+	Id           	int64	`json:"id"`
+	Status			int8	`json:"status"`
+	UserName 	 	string  `sql:"size:50" json:"user_name"`
+	Email 		 	string  `sql:"size:50" json:"email"`
+	Password 		string  `sql:"size:50"`
+	HashedPassword  []byte	`json:"hashed_password"`
+	FullName        string  `sql:"size:255" json:"full_name"`
+	LastLogin    	time.Time `json:"last_login"`
+	CreatedDate    	time.Time `json:"created_date"`
+	UpdatedDate    	time.Time `json:"updated_date"`
+	DeletedDate    	time.Time `json:"deleted_date"`
+}
 
 var userRegex = regexp.MustCompile("^\\w*$")
 
