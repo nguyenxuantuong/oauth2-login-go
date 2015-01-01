@@ -140,3 +140,49 @@ func (t *GoTest) TestMarshallJsonDifferentKey(){
 	t.AssertNotEqual(strings.Index(s, "urlCustom"), -1)
 }
 
+type Valueable interface {
+	Value() int64
+}
+
+type Parent struct{
+	value int64
+}
+
+func (i *Parent) Value() int64 {
+	return i.value
+}
+
+type Child struct{
+	Parent
+	multiplier int64
+}
+
+func (i Child) Value() int64 {
+	return i.value * i.multiplier
+}
+
+//NOTE: we need to use value overhere; not pointer?
+func GetValue(c Valueable) int64{
+	return c.Value();
+}
+
+func (t *GoTest) TestEmbedByValue(){
+	var parent = Parent{3};
+	var child = &Child{parent, 3}
+	
+	t.AssertEqual(parent.Value(), 3);
+	t.AssertEqual(child.Value(), 9);
+	t.AssertEqual(child.Parent.Value(), 3);
+	
+	//this using instance instead of value
+	var childInstance = Child{parent, 3}
+	t.AssertEqual(childInstance.Parent.Value(), 3);
+	
+	//parent using pointer; so need to use &parent; otherwise, interface won't work
+	//t.AssertEqual(GetValue(parent), 3); --> this won't work because parent using pointer for overloading Value() of interface
+	t.AssertEqual(GetValue(&parent), 3);
+
+	//child method using value; not pointer; so need to put value here
+	t.AssertEqual(GetValue(child), 9);
+	t.AssertEqual(GetValue(childInstance), 9); //->this work because child using value; not pointer when overloading Value() of interface
+}

@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/revel/revel"
+	"auth/app/emails"
 )
 
 func init() {
@@ -22,6 +23,7 @@ func init() {
 	}
 
 	// register startup functions with OnAppStart
+	revel.OnAppStart(emails.Init)
 	// revel.OnAppStart(FillCache)
 }
 

@@ -17,7 +17,7 @@ type User struct {
 	Status			int8	`json:"status"`
 	UserName 	 	string  `sql:"size:50" json:"user_name"`
 	Email 		 	string  `sql:"size:50" json:"email"`
-	Password 		string  `sql:"size:50"`
+	Password 		string  `sql:"size:50" json:"password"`
 	HashedPassword  []byte	`json:"hashed_password"`
 	FullName        string  `sql:"size:255" json:"full_name"`
 	LastLogin    	time.Time `json:"last_login"`

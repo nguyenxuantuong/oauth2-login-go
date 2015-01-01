@@ -2,14 +2,19 @@ package tests
 
 import (
 	"github.com/revel/revel"
+	"auth/app/emails"
+//	"github.com/revel/revel/cache"
+	"fmt"
 )
+
+var _ = fmt.Printf
 
 type AppTest struct {
 	revel.TestSuite
 }
 
 func (t *AppTest) Before() {
-	println("Set up")
+	//TODO: some setup
 }
 
 func (t *AppTest) TestThatIndexPageWorks() {
@@ -18,6 +23,27 @@ func (t *AppTest) TestThatIndexPageWorks() {
 	t.AssertContentType("text/html; charset=utf-8")
 }
 
+func (t *AppTest) TestEmailTemplates(){
+	emailInfo := emails.EmailInfo{
+		ToEmail: "xuan_tuong@mailinator.com",
+		ToName: "Nguyen Xuan Tuong",
+		Subject: "Account Activation",
+		FromEmail: "noreply@auth.com",
+		FromName: "Auth Team",
+	}
+	
+	emailPlaceHolder := emails.EmailPlaceHolder{
+		URL: "http://localhost:8888/accountActivation/1234",
+		UserName: "Nguyen Xuan Tuong",
+	}
+	
+	//now sending email
+	err := emails.Send(emails.AccountActivation, emailInfo, emailPlaceHolder)
+	if err != nil {
+		revel.ERROR.Printf("error happen when sending email %s", err)
+	}
+}
+
 func (t *AppTest) After() {
-	println("Tear down")
+	//TODO: some teardown
 }

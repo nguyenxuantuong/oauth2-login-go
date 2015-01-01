@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"github.com/revel/revel"
-	"github.com/revel/revel/cache"
+//	"github.com/revel/revel/cache"
 	"auth/app/models"
 	"encoding/json"
 	"code.google.com/p/go.crypto/bcrypt"
@@ -64,10 +64,10 @@ func (c Auth) Register() revel.Result {
 func (c Auth) Login() revel.Result {
 	var sessionKey string
 	sessionKey = "s:user_" + c.Session.Id()
-
+	
 	//if session is found; then return immediately
 	var sessionUser models.User
-	cache.Get(sessionKey, &sessionUser)
+	RCache.Get(sessionKey, &sessionUser)
 
 	//TODO: how to check if result is found
 	if sessionUser.Email != "" {
@@ -101,7 +101,7 @@ func (c Auth) Login() revel.Result {
 	}
 
 	//otherwise, set session in redis
-	go cache.Set(sessionKey, user, c.getSessionExpire())
+	go RCache.Set(sessionKey, user, SessionExpire)
 	
 	return c.RenderJsonSuccess(user)
 }
