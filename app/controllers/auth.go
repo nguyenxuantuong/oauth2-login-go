@@ -13,6 +13,7 @@ import (
 var _ = fmt.Printf
 
 type Auth struct {
+	BaseController
 	GormController
 }
 

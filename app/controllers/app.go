@@ -5,7 +5,7 @@ import (
 )
 
 type App struct {
-	GormController
+	BaseController
 }
 
 //index path
