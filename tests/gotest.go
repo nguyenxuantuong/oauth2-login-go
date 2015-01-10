@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"bytes"
 	"strings"
+	"unsafe"
 )
 
 var _ = fmt.Printf
@@ -185,4 +186,20 @@ func (t *GoTest) TestEmbedByValue(){
 	//child method using value; not pointer; so need to put value here
 	t.AssertEqual(GetValue(child), 9);
 	t.AssertEqual(GetValue(childInstance), 9); //->this work because child using value; not pointer when overloading Value() of interface
+}
+
+//casting pointer
+func (t *GoTest) TestCastingPointer(){
+	type CusParentPtr *Parent
+	
+	var parent = Parent{value: 14}
+	
+	var cusPtr CusParentPtr = (CusParentPtr)(unsafe.Pointer(&parent))
+
+	var parentPtr *Parent = (*Parent)(unsafe.Pointer(cusPtr))
+	t.AssertEqual(parentPtr.Value(), 14)
+
+	var cusPtr2 CusParentPtr = (CusParentPtr)(&parent)
+	var parentPtr2 *Parent = (*Parent)(cusPtr2)
+	t.AssertEqual(parentPtr2.Value(), 14)
 }

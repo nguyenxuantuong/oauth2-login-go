@@ -32,7 +32,7 @@ func NewMandrillSender() MandrillSender {
 	return MandrillSender{apiKey}	
 }
 
-//send function
+//send function -- TODO: also return status for individual email -- check Mandrill API
 func (sender MandrillSender) Send(emailType EmailType, emailInfo EmailInfo, placeHolder EmailPlaceHolder) error {
 	var emailContent string
 	
@@ -64,12 +64,7 @@ func (sender MandrillSender) Send(emailType EmailType, emailInfo EmailInfo, plac
 	msg.FromEmail = emailInfo.FromEmail
 	msg.FromName = emailInfo.ToEmail
 	
-	res, err := msg.Send(false)
-	
-	//sending results
-	if len(res) >= 1 {
-		revel.INFO.Printf("Sending result %+v", res[0])
-	}
+	_, err := msg.Send(false)
 
 	return err
 }

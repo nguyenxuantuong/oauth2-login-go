@@ -61,6 +61,7 @@ func InitDB() {
 	//auto-migrate models
 	Gdb.AutoMigrate(&models.User{})
 	Gdb.AutoMigrate(&models.AccountActivation{})
+	Gdb.AutoMigrate(&models.PasswordReset{})
 }
 
 // NOTE: Gorm controller will create a transaction

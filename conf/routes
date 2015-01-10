@@ -4,15 +4,24 @@
 
 module:testrunner
 
-GET     /                                           App.Index
-GET     /login                                      App.Login
+# static router
+GET     /                                               App.Index
+GET     /login                                          App.Login
 
-POST    /api/user/register                          Auth.Register
-POST    /api/user/login                             Auth.Login
-POST    /api/user/forgotPassword                    Auth.ForgotPassword
-POST    /api/user/resetPassword                     Auth.ResetPassword
-POST    /api/user/activateAccount                   Auth.ActivateAccount
+# login & register
+POST    /api/user/register                              Auth.Register
+POST    /api/user/login                                 Auth.Login
+POST    /api/user/logout                                Auth.Logout
 
+# activate account
+POST    /api/user/activateAccount/:activationKey        Auth.ActivateAccount
+
+# request password reset + reset password using activation key
+POST    /api/user/requestPasswordReset                  Auth.RequestPasswordReset
+POST    /api/user/resetPassword/:passwordResetKey       Auth.ResetPassword
+
+#change password
+POST    /api/user/changePassword                        Auth.ChangePassword
 
 # Ignore favicon requests
 GET     /favicon.ico                                404

@@ -28,9 +28,9 @@ func (c BaseController) RenderJsonSuccess(data interface {}) revel.Result {
 	return c.RenderJson(Response{Status: "success", Data: data})
 }
 
-
 var (
 	SessionExpire time.Duration //default configuration -- keep time when session expired
+	WebURL string
 )
 
 func Init(){
@@ -48,6 +48,7 @@ func Init(){
 	}
 
 	SessionExpire = expireAfterDuration
+	WebURL, _ = revel.Config.String("http.weburl")
 	
 	//init db connections
 	InitDB()
