@@ -12,12 +12,19 @@ import (
 	"time"
 	"math"
 	"net/http"
+	"strings"
 )
 
 var _ = fmt.Printf
 var _ = http.Response{}
 
-var endpoint string
+var (
+	endpoint string
+	fbClientId string
+	fbClientSecret string
+	gClientId string
+	gClientSecret string
+)
 
 type UserTest struct {
 	revel.TestSuite
@@ -102,11 +109,37 @@ func activateAccount(t *UserTest, user *models.User) bool {
 	return true
 }
 
+func getFacebookAccessToken(t *UserTest) (string, string) {
+	url := "https://graph.facebook.com/oauth/access_token?grant_type=client_credentials&client_id="+ fbClientId+
+			"&client_secret=" + fbClientSecret;
+
+	//get access token
+	request := gorequest.New()
+
+	_,body,_ := request.Get(url).End()
+	tokens := strings.Split(body, "=")
+
+	t.AssertEqual(len(tokens), 2)
+
+	//get access tokens
+	accessToken := tokens[1]
+
+	//try to get test-user which is configured in the fb app pages
+	urlTestUser := "https://graph.facebook.com/" + fbClientId + "/accounts/test-users?access_token=" + accessToken;
+
+	_,body,_ = request.Get(urlTestUser).End()
+
+	return body, accessToken
+}
 
 //ACTUAL TEST
 func (t *UserTest) Before() {
 	endpoint, _ = revel.Config.String("http.endpoint")
-	
+	fbClientId, _ = revel.Config.String("facebook.clientId")
+	fbClientSecret, _ = revel.Config.String("facebook.clientSecret")
+	gClientId, _ = revel.Config.String("google.clientId")
+	gClientSecret, _ = revel.Config.String("google.clientSecret")
+		
 	controllers.Gdb.Exec("TRUNCATE TABLE user;")
 	controllers.Gdb.Exec("TRUNCATE TABLE account_activation;")
 	controllers.Gdb.Exec("TRUNCATE TABLE password_reset;")
@@ -220,6 +253,167 @@ func (t *UserTest) TestChangePassword() {
 	controllers.Gdb.First(&user)
 	
 	t.AssertEqual(bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(utils.GetMD5Hash("111112"))), nil)
+}
+
+func (t *UserTest) TestGetUserInfo() {
+	createUser(t)
+
+	//now change password
+	request := gorequest.New()
+
+	//login first to establish the session
+	request.Post(endpoint + "/api/user/login").
+	Send(`{"Email":"nguy0066@e.ntu.edu.sg"}`).
+	Send(`{"Password":"` + utils.GetMD5Hash("111111") +`"}`).
+	End()
+
+	_, body, _ := request.Post(endpoint + "/api/user/userInfo").End()
+
+	//decode the body -- tag is optional because json-decoder able to deal with lowercase
+	type UserResponse struct{
+		Status string `json:"status"`
+		Data   *models.User `json:"data"`
+	}
+
+	jsonResponse := UserResponse{}
+	json.Unmarshal([]byte(body), &jsonResponse)
+
+	t.AssertEqual(jsonResponse.Status, "success")
+	t.AssertEqual(jsonResponse.Data.Email, "nguy0066@e.ntu.edu.sg")
+}
+
+//test validate facebook access tokens
+func (t *UserTest) TestValidateFacebookAccessToken(){
+	body, _ := getFacebookAccessToken(t)
+	
+	type TokenUser struct{
+		AccessToken string `json:"access_token"`
+		Id string `json:"id"`
+	}	
+	
+	type UserResponse struct{
+		Data   []TokenUser `json:"data"`
+	}
+
+	jsonResponse := UserResponse{}
+	json.Unmarshal([]byte(body), &jsonResponse)
+	
+	t.AssertNotEqual(len(jsonResponse.Data), 0)
+
+	//using access token of test user to validate the access token method
+	t.AssertEqual(controllers.ValidateFacebookAccessToken(jsonResponse.Data[0].Id, jsonResponse.Data[0].AccessToken), true)
+}
+
+func (t *UserTest) TestValidateGoogleAccessToken(){
+	//get access token
+	request := gorequest.New()
+
+	//testUser: {
+	//email: "hardsmashme@gmail.com",
+	//name: "Smash me",
+	//	userId: "106351270674292229585",
+	//	password: "smashsmash",
+	//	refreshToken: "1/_73MHFa86rdz1qFcKG5x3HQZmpntGudQ3XEhFJAd9y0"
+	//}
+	
+	//refresh tokens is refresh token of the test user
+	_,body,_ := request.Post("https://accounts.google.com/o/oauth2/token").
+	Type("form").
+	Send(`{"client_id":"` + gClientId +`"}`).
+	Send(`{"client_secret":"` + gClientSecret +`"}`).
+	Send(`{"refresh_token":"` + "1/_73MHFa86rdz1qFcKG5x3HQZmpntGudQ3XEhFJAd9y0" +`"}`).
+	Send(`{"grant_type":"refresh_token"}`).End();
+
+	var f interface{}
+	err := json.Unmarshal([]byte(body), &f)
+	
+	t.AssertEqual(err, nil)
+	m := f.(map[string]interface{})
+	
+	accessToken := m["access_token"].(string)
+
+	//validate access tokens
+	t.AssertEqual(controllers.ValidateGoogleAccessToken("106351270674292229585", accessToken), true)
+}
+
+func (t *UserTest) TestRegisterUsingFacebook(){
+	body, _ := getFacebookAccessToken(t)
+
+	type TokenUser struct{
+		AccessToken string `json:"access_token"`
+		Id string `json:"id"`
+	}
+
+	type UserResponse struct{
+		Data   []TokenUser `json:"data"`
+	}
+
+	jsonResponse := UserResponse{}
+	json.Unmarshal([]byte(body), &jsonResponse)
+	
+	//then register using the new account
+	fbId := jsonResponse.Data[0].Id;
+	accessToken := jsonResponse.Data[0].AccessToken;
+
+	//now change password
+	request := gorequest.New()
+
+	//login first to establish the session
+	request.Post(endpoint + "/api/user/registerUsingFacebook").
+	Type("form").
+	Send(`{"fb_id":"` + fbId +`"}`).
+	Send(`{"access_token":"` + accessToken +`"}`).
+	Send(`{"name":"Nguyen Xuan Tuong"}`).
+	Send(`{"email":"nguy0066@e.ntu.edu.sg"}`).
+	End()
+
+	var users []models.User
+	controllers.Gdb.Find(&users)
+	t.AssertEqual(len(users), 1)
+
+	//then assert that newly user
+	user := users[0]
+	t.AssertEqual(user.FbId, fbId)
+	t.AssertEqual(user.Email, "nguy0066@e.ntu.edu.sg")
+	t.AssertEqual(user.Status, models.USER_ACTIVE)
+}
+
+func (t *UserTest) TestRegisterUsingGoogle(){
+	request := gorequest.New()
+	_,body,_ := request.Post("https://accounts.google.com/o/oauth2/token").
+	Type("form").
+	Send(`{"client_id":"` + gClientId +`"}`).
+	Send(`{"client_secret":"` + gClientSecret +`"}`).
+	Send(`{"refresh_token":"` + "1/_73MHFa86rdz1qFcKG5x3HQZmpntGudQ3XEhFJAd9y0" +`"}`).
+	Send(`{"grant_type":"refresh_token"}`).End();
+
+	var f interface{}
+	err := json.Unmarshal([]byte(body), &f)
+
+	t.AssertEqual(err, nil)
+	m := f.(map[string]interface{})
+
+	accessToken := m["access_token"].(string)
+
+	googleId := "106351270674292229585"
+	//register using google
+	request.Post(endpoint + "/api/user/registerUsingGoogle").
+	Type("form").
+	Send(`{"google_id":"` + googleId +`"}`).
+	Send(`{"access_token":"` + accessToken +`"}`).
+	Send(`{"name":"Nguyen Xuan Tuong"}`).
+	Send(`{"email":"nguy0066@e.ntu.edu.sg"}`).
+	End()
+
+	var users []models.User
+	controllers.Gdb.Find(&users)
+	t.AssertEqual(len(users), 1)
+
+	//then assert that newly user
+	user := users[0]
+	t.AssertEqual(user.GoogleId, googleId)
+	t.AssertEqual(user.Email, "nguy0066@e.ntu.edu.sg")
+	t.AssertEqual(user.Status, models.USER_ACTIVE)
 }
 
 func (t *UserTest) After() {

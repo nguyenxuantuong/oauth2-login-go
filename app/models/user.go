@@ -12,6 +12,7 @@ const (
 	USER_SUSPEND = 2
 )
 
+//TODO: create unique key constraint for email
 type User struct {
 	Id           	int64	`json:"id"`
 	Status			int8	`json:"status"`
@@ -20,6 +21,8 @@ type User struct {
 	Password 		string  `sql:"size:50" json:"password"`
 	HashedPassword  []byte	`json:"hashed_password"`
 	FullName        string  `sql:"size:255" json:"full_name"`
+	FbId           	string	`json:"fb_id"`
+	GoogleId        string	`json:"google_id"`
 	LastLogin    	time.Time `json:"last_login"`
 	CreatedDate    	time.Time `json:"created_date"`
 	UpdatedDate    	time.Time `json:"updated_date"`

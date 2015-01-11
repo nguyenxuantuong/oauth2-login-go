@@ -23,6 +23,20 @@ POST    /api/user/resetPassword/:passwordResetKey       Auth.ResetPassword
 #change password
 POST    /api/user/changePassword                        Auth.ChangePassword
 
+#register using google, facebook
+POST    /api/user/registerUsingFacebook                 Auth.RegisterUsingFacebook
+POST    /api/user/registerUsingGoogle                   Auth.RegisterUsingGoogle
+POST    /api/user/loginUsingFacebook                    Auth.LoginUsingFacebook
+POST    /api/user/loginUsingGoogle                      Auth.LoginUsingGoogle
+
+POST    /api/user/linkAccountWithFacebook               Auth.LinkAccountWithFacebook
+POST    /api/user/linkAccountWithGoogle                 Auth.LinkAccountWithGoogle
+POST    /api/user/unlinkAccountWithFacebook             Auth.UnlinkAccountWithFacebook
+POST    /api/user/unlinkAccountWithGoogle               Auth.UnlinkAccountWithGoogle
+
+#Get user info in session
+POST 	/api/user/userInfo								Auth.UserInfo
+
 # Ignore favicon requests
 GET     /favicon.ico                                404
 

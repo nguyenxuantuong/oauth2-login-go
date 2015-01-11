@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"code.google.com/p/go.crypto/bcrypt"
 	"github.com/jinzhu/gorm"
+	"github.com/parnurzeal/gorequest"
 	"fmt"
 	"time"
 )
@@ -341,4 +342,461 @@ func (c Auth) ChangePassword() revel.Result {
 	var response struct{}
 	return c.RenderJsonSuccess(response)
 }
+
+//get user info from session
+func (c Auth) UserInfo() revel.Result {
+	var sessionKey string
+	sessionKey = "s:user_" + c.Session.Id()
+	
+	var sessionUser models.User
+	RCache.Get(sessionKey, &sessionUser)
+
+	if sessionUser.Id == 0 {
+		c.RenderJsonError("User must be logged in first")
+	}
+
+	//get latest user info from database
+	var userId = sessionUser.Id
+	var existingUser = models.User{}
+
+	//find active user
+	if err := Gdb.Where("id=?", userId).Where("status=?", models.USER_ACTIVE).First(&existingUser).Error; err != nil {
+		return c.RenderJsonError("User does not exist")
+	}
+
+	//TODO: might want to include other information here
+	return c.RenderJsonSuccess(existingUser.Sanitize())
+}
+
+//function to validate the access tokens
+func ValidateFacebookAccessToken(fbId string, accessToken string) bool {
+	url := "https://graph.facebook.com/me?access_token=" + accessToken;
+	_, body, _ := gorequest.New().Get(url).End()
+
+	//unmarshal arbitrary data
+	var f interface{}
+	err := json.Unmarshal([]byte(body), &f)
+	
+	if err != nil {
+		revel.ERROR.Println("unable to unmarshal json data accesstoken")
+		return false
+	}
+
+	m := f.(map[string]interface{})
+	
+	if m["id"] == fbId {
+		return true
+	} else {
+	 	return false
+	}
+}
+
+//validate access tokens
+func ValidateGoogleAccessToken(googleId string, accessToken string) bool {
+	url := "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + accessToken;
+	_, body, _ := gorequest.New().Get(url).End()
+
+	var f interface{}
+	err := json.Unmarshal([]byte(body), &f)
+
+	if err != nil {
+		revel.ERROR.Println("unable to unmarshal json data accesstoken")
+		return false
+	}
+
+	m := f.(map[string]interface{})
+	
+	if m["id"] == googleId {
+		return true
+	} else {
+		return false
+	}
+}
+
+//register using facebook
+func (c Auth) RegisterUsingFacebook() revel.Result {
+	email := c.Params.Get("email")
+	name := c.Params.Get("name")
+	fbId := c.Params.Get("fb_id")
+	accessTokens := c.Params.Get("access_token")
+
+	//Note: For now, email id is required;
+	//TODO: check to see if can ignore email; note that sometimes email not being returned from Oath2
+	c.Validation.Check(email, revel.Required{})
+	c.Validation.Check(name, revel.Required{})
+	c.Validation.Check(fbId, revel.Required{})
+	c.Validation.Check(accessTokens, revel.Required{})
+
+	// Handle errors
+	if c.Validation.HasErrors() {
+		return c.RenderJson(c.Validation.Errors)
+	}
+	
+	//validate facebook access token
+	if(!ValidateFacebookAccessToken(fbId, accessTokens)){
+		return c.RenderJsonError("Invalid facebook access tokens")
+	}
+	
+	//now check if user with fbId exist
+	var users []models.User
+	if err := Gdb.Where("fb_id= ?", fbId).Find(&users).Error; err != nil {
+		return c.RenderJsonError("Internal Server Error")
+	}
+
+	if len(users) >= 2 {
+		return c.RenderJsonError("There are two account with the same fbId")		
+	}
+	
+	var sessionKey string
+	sessionKey = "s:user_"+c.Session.Id()
+	
+	if len(users) == 1 {
+		if users[0].Status == models.USER_ACTIVE {
+			//logged user in directly
+			RCache.Set(sessionKey, users[0], SessionExpire)
+			return c.RenderJsonSuccess(users[0])
+		} else {
+			return c.RenderJsonError("User was not activated")
+		}
+	}
+	
+	//if there is no such user with fbId; check email and register user
+	users = []models.User{}
+	if err := Gdb.Where("email= ?", email).Find(&users).Error; err != nil {
+		return c.RenderJsonError("Internal Server Error")
+	}
+	
+	if len(users) >= 2 {
+		return c.RenderJsonError("There are two account with the same email id")
+	}
+
+	if len(users) == 1 {
+		//update fbId field of that account
+		existingUser := users[0]
+		existingUser.FbId = fbId;
+		
+		Gdb.Save(&existingUser)
+		
+		RCache.Set(sessionKey, existingUser, SessionExpire)
+		return c.RenderJsonSuccess(existingUser)
+	}
+	
+	//otherwise just create new users
+	newUser := models.User{
+		FullName: name,
+		Email: email,
+		UserName: email,
+		Password: "",
+		Status: models.USER_ACTIVE,
+		FbId: fbId,
+	}
+
+	Gdb.Save(&newUser)
+
+	RCache.Set(sessionKey, newUser, SessionExpire)
+	return c.RenderJsonSuccess(newUser)
+}
+
+//register using google
+func (c Auth) RegisterUsingGoogle() revel.Result {
+	email := c.Params.Get("email")
+	name := c.Params.Get("name")
+	googleId := c.Params.Get("google_id")
+	accessTokens := c.Params.Get("access_token")
+
+	//Note: For now, email id is required;
+	//TODO: check to see if can ignore email; note that sometimes email not being returned from Oath2
+	c.Validation.Check(email, revel.Required{})
+	c.Validation.Check(name, revel.Required{})
+	c.Validation.Check(googleId, revel.Required{})
+	c.Validation.Check(accessTokens, revel.Required{})
+
+	// Handle errors
+	if c.Validation.HasErrors() {
+		return c.RenderJson(c.Validation.Errors)
+	}
+
+	//validate facebook access token
+	if(!ValidateGoogleAccessToken(googleId, accessTokens)){
+		return c.RenderJsonError("Invalid facebook access tokens")
+	}
+
+	//now check if user with fbId exist
+	var users []models.User
+	if err := Gdb.Where("google_id= ?", googleId).Find(&users).Error; err != nil {
+		return c.RenderJsonError("Internal Server Error")
+	}
+
+	if len(users) >= 2 {
+		return c.RenderJsonError("There are two account with the same google id")
+	}
+
+	var sessionKey string
+	sessionKey = "s:user_"+c.Session.Id()
+
+	if len(users) == 1 {
+		if users[0].Status == models.USER_ACTIVE {
+			//logged user in directly
+			RCache.Set(sessionKey, users[0], SessionExpire)
+			return c.RenderJsonSuccess(users[0])
+		} else {
+			return c.RenderJsonError("User was not activated")
+		}
+	}
+
+	//if there is no such user with fbId; check email and register user
+	users = []models.User{}
+	if err := Gdb.Where("email= ?", email).Find(&users).Error; err != nil {
+		return c.RenderJsonError("Internal Server Error")
+	}
+
+	if len(users) >= 2 {
+		return c.RenderJsonError("There are two account with the same email id")
+	}
+
+	if len(users) == 1 {
+		//update fbId field of that account
+		existingUser := users[0]
+		existingUser.GoogleId = googleId;
+
+		Gdb.Save(&existingUser)
+
+		RCache.Set(sessionKey, existingUser, SessionExpire)
+		return c.RenderJsonSuccess(existingUser)
+	}
+
+	//otherwise just create new users
+	newUser := models.User{
+		FullName: name,
+		Email: email,
+		UserName: email,
+		Password: "",
+		Status: models.USER_ACTIVE,
+		GoogleId: googleId,
+	}
+
+	Gdb.Save(&newUser)
+
+	RCache.Set(sessionKey, newUser, SessionExpire)
+	return c.RenderJsonSuccess(newUser)
+}
+
+func (c Auth) LoginUsingFacebook() revel.Result {
+	fbId := c.Params.Get("fb_id")
+	accessTokens := c.Params.Get("access_token")
+
+	c.Validation.Check(fbId, revel.Required{})
+	c.Validation.Check(accessTokens, revel.Required{})
+
+	// Handle errors
+	if c.Validation.HasErrors() {
+		return c.RenderJson(c.Validation.Errors)
+	}
+
+	//validate facebook access token
+	if(!ValidateFacebookAccessToken(fbId, accessTokens)){
+		return c.RenderJsonError("Invalid facebook access tokens")
+	}
+
+	//now check if user with fbId exist
+	var users []models.User
+	if err := Gdb.Where("fb_id= ?", fbId).Find(&users).Error; err != nil {
+		return c.RenderJsonError("Internal Server Error")
+	}
+
+	if len(users) >= 2 {
+		return c.RenderJsonError("There are two account with the same fbId")
+	}
+
+	var sessionKey string
+	sessionKey = "s:user_"+c.Session.Id()
+
+	if len(users) == 1 {
+		if users[0].Status == models.USER_ACTIVE {
+			//logged user in directly
+			RCache.Set(sessionKey, users[0], SessionExpire)
+			return c.RenderJsonSuccess(users[0])
+		} else {
+			return c.RenderJsonError("User was not activated")
+		}
+	} else {
+		return c.RenderJsonError("User with facebook id does not exist")
+	}
+}
+
+func (c Auth) LoginUsingGoogle() revel.Result {
+	googleId := c.Params.Get("google_id")
+	accessTokens := c.Params.Get("access_token")
+
+	c.Validation.Check(googleId, revel.Required{})
+	c.Validation.Check(accessTokens, revel.Required{})
+
+	// Handle errors
+	if c.Validation.HasErrors() {
+		return c.RenderJson(c.Validation.Errors)
+	}
+
+	//validate facebook access token
+	if(!ValidateGoogleAccessToken(googleId, accessTokens)){
+		return c.RenderJsonError("Invalid google access tokens")
+	}
+
+	//now check if user with fbId exist
+	var users []models.User
+	if err := Gdb.Where("google_id= ?", googleId).Find(&users).Error; err != nil {
+		return c.RenderJsonError("Internal Server Error")
+	}
+
+	if len(users) >= 2 {
+		return c.RenderJsonError("There are two account with the same google id")
+	}
+
+	var sessionKey string
+	sessionKey = "s:user_"+c.Session.Id()
+
+	if len(users) == 1 {
+		if users[0].Status == models.USER_ACTIVE {
+			//logged user in directly
+			RCache.Set(sessionKey, users[0], SessionExpire)
+			return c.RenderJsonSuccess(users[0])
+		} else {
+			return c.RenderJsonError("User was not activated")
+		}
+	} else {
+		return c.RenderJsonError("User with facebook id does not exist")
+	}
+}
+
+//link and unlink facebook, google
+func (c Auth) LinkAccountWithFacebook() revel.Result {
+	var sessionKey string
+	sessionKey = "s:user_" + c.Session.Id()
+
+	var sessionUser models.User
+	RCache.Get(sessionKey, &sessionUser)
+
+	if sessionUser.Id == 0 {
+		c.RenderJsonError("User must be logged in first")
+	}
+
+	fbId := c.Params.Get("fb_id")
+	accessTokens := c.Params.Get("access_token")
+
+	c.Validation.Check(fbId, revel.Required{})
+	c.Validation.Check(accessTokens, revel.Required{})
+
+	// Handle errors
+	if c.Validation.HasErrors() {
+		return c.RenderJson(c.Validation.Errors)
+	}
+
+	//validate facebook access token
+	if(!ValidateFacebookAccessToken(fbId, accessTokens)){
+		return c.RenderJsonError("Invalid facebook access tokens")
+	}
+
+	//get latest user info from database
+	var userId = sessionUser.Id
+	var existingUser = models.User{}
+
+	//find active user
+	if err := Gdb.Where("id=?", userId).Where("status=?", models.USER_ACTIVE).First(&existingUser).Error; err != nil {
+		return c.RenderJsonError("User does not exist")
+	}
+
+	//update the existing user
+	existingUser.FbId = fbId;
+	Gdb.Save(&existingUser);
+	
+	//TODO: might want to include other information here
+	return c.RenderJsonSuccess(existingUser.Sanitize())
+}
+
+func (c Auth) LinkAccountWithGoogle() revel.Result {
+	var sessionKey string
+	sessionKey = "s:user_" + c.Session.Id()
+
+	var sessionUser models.User
+	RCache.Get(sessionKey, &sessionUser)
+
+	if sessionUser.Id == 0 {
+		c.RenderJsonError("User must be logged in first")
+	}
+
+	googleId := c.Params.Get("google_id")
+	accessTokens := c.Params.Get("access_token")
+
+	c.Validation.Check(googleId, revel.Required{})
+	c.Validation.Check(accessTokens, revel.Required{})
+
+	// Handle errors
+	if c.Validation.HasErrors() {
+		return c.RenderJson(c.Validation.Errors)
+	}
+
+	//validate facebook access token
+	if(!ValidateGoogleAccessToken(googleId, accessTokens)){
+		return c.RenderJsonError("Invalid google access tokens")
+	}
+
+	//get latest user info from database
+	var userId = sessionUser.Id
+	var existingUser = models.User{}
+
+	//find active user
+	if err := Gdb.Where("id=?", userId).Where("status=?", models.USER_ACTIVE).First(&existingUser).Error; err != nil {
+		return c.RenderJsonError("User does not exist")
+	}
+
+	//update the existing user
+	existingUser.GoogleId = googleId;
+	Gdb.Save(&existingUser);
+
+	//TODO: might want to include other information here
+	return c.RenderJsonSuccess(existingUser.Sanitize())
+}
+
+
+func (c Auth) UnlinkAccountWithFacebook() revel.Result {
+	var sessionKey string
+	sessionKey = "s:user_" + c.Session.Id()
+
+	var sessionUser models.User
+	RCache.Get(sessionKey, &sessionUser)
+
+	if sessionUser.Id == 0 {
+		c.RenderJsonError("User must be logged in first")
+	}
+
+	existingUser := models.User{}
+	if err := Gdb.First(&existingUser).Update("facebook_id", "").Error; err != nil {
+		return c.RenderJsonError("Unable to unlink account with facebook")
+	}
+
+	var response struct{}
+	return c.RenderJsonSuccess(response)
+}
+
+
+func (c Auth) UnlinkAccountWithGoogle() revel.Result {
+	var sessionKey string
+	sessionKey = "s:user_" + c.Session.Id()
+
+	var sessionUser models.User
+	RCache.Get(sessionKey, &sessionUser)
+
+	if sessionUser.Id == 0 {
+		c.RenderJsonError("User must be logged in first")
+	}
+	
+	existingUser := models.User{}
+	if err := Gdb.First(&existingUser).Update("google_id", "").Error; err != nil {
+		return c.RenderJsonError("Unable to unlink account with google")
+	}
+
+	var response struct{}
+	return c.RenderJsonSuccess(response)
+}
+
+
 
