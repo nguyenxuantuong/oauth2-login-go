@@ -2,7 +2,8 @@
 
 ## Getting Started
 
-Auth is based on Revel -- A high-productivity web framework for the [Go language](http://www.golang.org/).
+Auth is OATH2 implementation using go language. It is based on Revel -- A high-productivity web framework for the [Go language](http://www.golang.org/).
+Auth aims to a centralized system which every other services system depend on. Think about a centralized system from Google (you access it via accounts.google.com)
 
 ### Start the web server:
 
