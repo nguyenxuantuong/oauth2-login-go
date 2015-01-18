@@ -105,9 +105,34 @@ func (s *OAuthStorage) SaveAccess(data *osin.AccessData) error {
 
 func (s *OAuthStorage) LoadAccess(token string) (*osin.AccessData, error) {
 	accesses := s.Session.DB(s.dbName).C(ACCESS_COL)
-	accData := new(osin.AccessData)
-	err := accesses.FindId(token).One(accData)
-	return accData, err
+
+	newClient := osin.DefaultClient{}
+	authorizeData := osin.AuthorizeData{
+		Client: &newClient,
+	}
+
+	accData := osin.AccessData{
+		Client: &newClient,
+		AuthorizeData: &authorizeData,
+	}
+
+	genericAccessData := make(map[string]interface{})
+	if err := accesses.FindId(token).One(&genericAccessData); err != nil {
+		return &accData, err
+	}
+
+	jsonData, err := json.Marshal(&genericAccessData)
+	if err != nil {
+		return &accData, err
+	}
+
+	//then unmarshal again
+	if err := json.Unmarshal(jsonData, &accData); err != nil {
+		return &accData, err
+	}
+
+	//if everything is fine; then redirect directly
+	return &accData, err
 }
 
 func (s *OAuthStorage) RemoveAccess(token string) error {
@@ -115,11 +140,37 @@ func (s *OAuthStorage) RemoveAccess(token string) error {
 	return accesses.RemoveId(token)
 }
 
+//loading access data based on refresh token instead
 func (s *OAuthStorage) LoadRefresh(token string) (*osin.AccessData, error) {
 	accesses := s.Session.DB(s.dbName).C(ACCESS_COL)
-	accData := new(osin.AccessData)
-	err := accesses.Find(bson.M{REFRESHTOKEN: token}).One(accData)
-	return accData, err
+
+	newClient := osin.DefaultClient{}
+	authorizeData := osin.AuthorizeData{
+		Client: &newClient,
+	}
+
+	accData := osin.AccessData{
+		Client: &newClient,
+		AuthorizeData: &authorizeData,
+	}
+
+	genericAccessData := make(map[string]interface{})
+	if err := accesses.Find(bson.M{REFRESHTOKEN: token}).One(&genericAccessData); err != nil {
+		return &accData, err
+	}
+
+	jsonData, err := json.Marshal(&genericAccessData)
+	if err != nil {
+		return &accData, err
+	}
+
+	//then unmarshal again
+	if err := json.Unmarshal(jsonData, &accData); err != nil {
+		return &accData, err
+	}
+
+	//if everything is fine; then redirect directly
+	return &accData, err
 }
 
 func (s *OAuthStorage) RemoveRefresh(token string) error {

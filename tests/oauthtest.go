@@ -46,10 +46,7 @@ func (t *OAuthTest) After() {
 }
 
 
-func (t *OAuthTest) TestAuthorizeCode(){
-	//init the oauth storage and insert a sample client
-	oauthStorage = utils.NewOAuthStorage(controllers.Session, MongoTestDB)
-
+func (t *OAuthTest) RequestAuthorizationCode(oauthStorage *utils.OAuthStorage) (*osin.AuthorizeData, error) {
 	newClient = osin.DefaultClient{
 		Id: "1234",
 		Secret: "aabbccdd",
@@ -60,12 +57,12 @@ func (t *OAuthTest) TestAuthorizeCode(){
 	if err := oauthStorage.SetClient(newClient.Id, &newClient); err != nil {
 		t.AssertEqual(err, nil)
 	}
-	
+
 	req, err := http.NewRequest("GET", endpoint + "/api/oauth/authorize", nil)
 	if err != nil {
 		t.AssertEqual(err, nil)
 	}
-	
+
 	//attach some params in the url parameter
 	req.Form = make(url.Values)
 	req.Form.Set("response_type", string(osin.CODE))
@@ -82,9 +79,23 @@ func (t *OAuthTest) TestAuthorizeCode(){
 	code, found := resp.Output["code"].(string)
 
 	t.AssertEqual(found, true)
-	
-	//now try to get the authorize code
+
 	authorizationData, err := oauthStorage.LoadAuthorize(code)
+	if err != nil {
+		t.AssertEqual(err, nil)
+	}
+	
+	return authorizationData, err
+}
+
+//test get authorize code
+func (t *OAuthTest) TestAuthorizeCode(){
+	//init the oauth storage and insert a sample client
+	oauthStorage = utils.NewOAuthStorage(controllers.Session, MongoTestDB)
+
+	//now try to get the authorize code
+	authorizationData, err := t.RequestAuthorizationCode(oauthStorage)
+	
 	if err != nil {
 		t.AssertEqual(err, nil)		
 	}		
@@ -92,7 +103,43 @@ func (t *OAuthTest) TestAuthorizeCode(){
 	//assert the data
 	t.AssertEqual(authorizationData.Client.GetId(), newClient.GetId())
 	t.AssertEqual(authorizationData.Client.GetSecret(), newClient.GetSecret())
-	t.AssertEqual(authorizationData.Code, code)
+}
+
+//test get access code
+func (t *OAuthTest) TestAccessCode(){
+	//init the oauth storage and insert a sample client
+	oauthStorage = utils.NewOAuthStorage(controllers.Session, MongoTestDB)
+
+	//now try to get the authorize code
+	authorizationData, err := t.RequestAuthorizationCode(oauthStorage)
+
+	if err != nil {
+		t.AssertEqual(err, nil)
+	}
+
+	req, err := http.NewRequest("POST", endpoint + "/api/oauth/token", nil)
+	if err != nil {
+		t.AssertEqual(err, nil)
+	}
+	
+	//set clientId, clientSecret in authorization request
+	req.SetBasicAuth(authorizationData.Client.GetId(), authorizationData.Client.GetSecret())
+
+	req.Form = make(url.Values)
+	req.Form.Set("grant_type", string(osin.AUTHORIZATION_CODE))
+	req.Form.Set("code", authorizationData.Code)
+	req.Form.Set("state", "everything")
+	req.PostForm = make(url.Values)
+
+	//initialize request
+	resp := controllers.OAuthServer.NewResponse()
+	if ar := controllers.OAuthServer.HandleAccessRequest(resp, req); ar != nil {
+		ar.Authorized = true
+		controllers.OAuthServer.FinishAccessRequest(resp, req, ar)
+	}
+
+	//verify that access_token and refresh_token has been created
+	
 }
 
 

@@ -31,6 +31,7 @@ type Client  struct {
 
 var (
 	newAuthorizeData osin.AuthorizeData
+	newAccessData osin.AccessData
 )
 
 func (t *OAuthStorageTest) Before() {
@@ -40,19 +41,32 @@ func (t *OAuthStorageTest) Before() {
 	//drop the collections
 	controllers.Session.DB(MongoTestDB).C(utils.CLIENT_COL).DropCollection()
 	controllers.Session.DB(MongoTestDB).C(utils.AUTHORIZE_COL).DropCollection()
+	controllers.Session.DB(MongoTestDB).C(utils.ACCESS_COL).DropCollection()
+	
+	newClient := osin.DefaultClient{
+		Id: "1234",
+		Secret: "aabbccdd",
+		RedirectUri: "http://localhost:9000",
+	}
 	
 	//other initialization
 	newAuthorizeData = osin.AuthorizeData{
-		Client: &osin.DefaultClient{
-			Id: "1234",
-			Secret: "aabbccdd",
-			RedirectUri: "http://localhost:9000",
-		},
+		Client: &newClient,
 		Code: "OTI2NWUyYWEtOGJhYy00ZjhiLTk2MjItNGViOTVmNWEwZWEw",
 		ExpiresIn: 250,
 		Scope: "",
 		RedirectUri: "http://127.0.0.1:8889",
 		State: "everything",
+	}
+	
+	newAccessData = osin.AccessData{
+		Client: &newClient,
+		AuthorizeData: &newAuthorizeData,
+		AccessToken: "M2Q4MzRhMGUtZmFhNC00OTA5LTkzODUtN2YzYjk1YjFiYzhl",
+		RefreshToken: "MmNiOGE5NTgtYjJkYy00NWFhLTliYWItYTI1NGMzYmM3OTMw",
+		ExpiresIn: 3600,
+		Scope: "",
+		RedirectUri: "http://localhost:9000",
 	}
 }
 
@@ -60,8 +74,53 @@ func (t *OAuthStorageTest) After() {
 	//drop the collections
 	controllers.Session.DB(MongoTestDB).C(utils.CLIENT_COL).DropCollection()
 	controllers.Session.DB(MongoTestDB).C(utils.AUTHORIZE_COL).DropCollection()
+	controllers.Session.DB(MongoTestDB).C(utils.ACCESS_COL).DropCollection()
 }
 
+//test get set access tokens
+func (t *OAuthStorageTest) TestGetSetAccessStorage(){
+	oauthStorage = utils.NewOAuthStorage(controllers.Session, MongoTestDB)
+
+	if err := oauthStorage.SaveAccess(&newAccessData); err != nil {
+		t.AssertEqual(err, nil)
+	}
+
+	existingAccessData, err := oauthStorage.LoadAccess(newAccessData.AccessToken)
+	t.AssertEqual(err, nil)
+
+	t.AssertEqual(existingAccessData.AccessToken, newAccessData.AccessToken)
+	t.AssertEqual(existingAccessData.Client.GetId(), newAccessData.Client.GetId())
+	t.AssertEqual(existingAccessData.Client.GetSecret(), newAccessData.Client.GetSecret())
+
+	//also check if loading refresh token method work as expected
+	existingAccessData, err = oauthStorage.LoadAccess(newAccessData.AccessToken)
+	t.AssertEqual(err, nil)
+
+	t.AssertEqual(existingAccessData.AccessToken, newAccessData.AccessToken)
+	t.AssertEqual(existingAccessData.Client.GetId(), newAccessData.Client.GetId())
+	t.AssertEqual(existingAccessData.Client.GetSecret(), newAccessData.Client.GetSecret())
+
+	oldRefreshToken := existingAccessData.RefreshToken
+	
+	//remove refresh token
+	if err = oauthStorage.RemoveRefresh(existingAccessData.RefreshToken); err != nil {
+		t.AssertEqual(err, nil)
+	}
+	
+	existingAccessData, err = oauthStorage.LoadAccess(newAccessData.AccessToken)
+	t.AssertEqual(err, nil)
+	
+	t.AssertNotEqual(existingAccessData.RefreshToken, oldRefreshToken)
+	
+	//now remove the existing authorize tokens
+	if err := oauthStorage.RemoveAccess(newAccessData.AccessToken); err != nil {
+		t.AssertEqual(err, nil)
+	}
+
+	//it will get error -- not found
+	existingAccessData, err = oauthStorage.LoadAccess(newAccessData.AccessToken)
+	t.AssertNotEqual(err, nil)
+}
 
 func (t *OAuthStorageTest) TestGetSetClientStorage(){
 	//init the oauth storage and insert a sample client
@@ -116,6 +175,41 @@ func (t *OAuthStorageTest) TestGetSetAuthorizeStorage(){
 }
 
 //some raw functions
+func (t *OAuthStorageTest) TestInsertAccessCode(){
+	accessCol := controllers.Session.DB(MongoTestDB).C(utils.ACCESS_COL)
+	
+	if _, err := accessCol.UpsertId(newAccessData.AccessToken, &newAccessData); err != nil {
+		t.AssertEqual(err, nil)
+	}
+
+	genericAccessData := make(map[string]interface{})
+
+	if err := accessCol.FindId(newAccessData.AccessToken).One(&genericAccessData); err != nil {
+		t.AssertEqual(err, nil)
+	}
+
+	jsonData, _ := json.Marshal(&genericAccessData)
+	
+	newClient := osin.DefaultClient{}
+	authorizeData := osin.AuthorizeData{
+		Client: &newClient,
+	}
+	
+	existingAccessData := osin.AccessData{
+		Client: &newClient,
+		AuthorizeData: &authorizeData,
+	}
+	
+	//now seriablize data
+	if err := json.Unmarshal(jsonData, &existingAccessData); err != nil {
+		t.AssertEqual(err, nil)
+	}
+	
+	t.AssertEqual(existingAccessData.AuthorizeData.Client.GetId(), newClient.GetId())
+	t.AssertEqual(existingAccessData.Client.GetId(), newClient.GetId())
+	t.AssertEqual(existingAccessData.RefreshToken, newAccessData.RefreshToken)
+}
+
 func (t *OAuthStorageTest) TestInsertAuthorizeCode(){
 	authorizations := controllers.Session.DB(MongoTestDB).C(utils.AUTHORIZE_COL)
 
