@@ -93,7 +93,7 @@ func (t *OAuthStorageTest) TestGetSetAccessStorage(){
 	t.AssertEqual(existingAccessData.Client.GetSecret(), newAccessData.Client.GetSecret())
 
 	//also check if loading refresh token method work as expected
-	existingAccessData, err = oauthStorage.LoadAccess(newAccessData.AccessToken)
+	existingAccessData, err = oauthStorage.LoadRefresh(existingAccessData.RefreshToken)
 	t.AssertEqual(err, nil)
 
 	t.AssertEqual(existingAccessData.AccessToken, newAccessData.AccessToken)

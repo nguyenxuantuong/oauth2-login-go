@@ -8,6 +8,7 @@ import (
 	"auth/app/utils"
 	"auth/app/models"
 	"auth/app/routes"
+	"code.google.com/p/go.crypto/bcrypt"
 //	"strings"
 )
 
@@ -35,7 +36,7 @@ func InitOAuthServer(){
 	OAuthServer = osin.NewServer(sconfig, utils.NewOAuthStorage(Session, mgoDbName))
 }
 
-//handler to authorize request
+//handler to authorize request; it will redirect the users to obtain either authorize_token or access_token
 func (c OAuth) Authorize() revel.Result {
 	//create resp object and defer close
 	resp := OAuthServer.NewResponse()
@@ -70,16 +71,58 @@ func (c OAuth) Authorize() revel.Result {
 	return nil
 }
 
-//exchange for tokens
+//exchange for tokens -- it should be called in server side; unless client-side is ssl
 func (c OAuth) AccessToken() revel.Result {
 	resp := OAuthServer.NewResponse()
 	defer resp.Close()
 
 	req := c.Request.Request;
+
+	var sessionKey string
+	sessionKey = "s:user_"+c.Session.Id()
+
+	//if session is found; then return immediately
+	var sessionUser models.User
+	RCache.Get(sessionKey, &sessionUser)
 	
 	if ar := OAuthServer.HandleAccessRequest(resp, req); ar != nil {
-		ar.Authorized = true
-		OAuthServer.FinishAccessRequest(resp, req, ar)
+		//TODO: if we allow request access token; user-password grant type; then putting logic to check for user's credential overhere
+		//also can add same logic in case user has already logged in; and want to request for access_token; no user-password check logic in the handle-request method
+		grantType := c.Params.Get("grant_type")
+		
+		if grantType == osin.PASSWORD {
+			if sessionUser.Id != 0 {
+				ar.Authorized = true
+				OAuthServer.FinishAccessRequest(resp, req, ar)
+			} else {
+				//get username and password from the request
+				username := c.Params.Get("username")
+				password := c.Params.Get("password")
+
+				//check if such user exist in database
+				user := models.User{}
+				if Gdb.Where("email = ?", username).First(&user).RecordNotFound() {
+					return c.RenderJsonError("Email does not exist");
+				}
+				
+				if user.Status != models.USER_ACTIVE {
+					return c.RenderJsonError("User was not activated.");
+				}
+
+				//compare password to validate the user
+				if err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(password)); err != nil {
+					return c.RenderJsonError("Passwords are miss-match");
+				}
+
+				//password; username is OK; we pass through
+				ar.Authorized = true
+				OAuthServer.FinishAccessRequest(resp, req, ar)
+			}
+		} else {
+			//just pass through
+			ar.Authorized = true
+			OAuthServer.FinishAccessRequest(resp, req, ar)
+		}
 	}
 
 	if resp.IsError && resp.InternalError != nil {

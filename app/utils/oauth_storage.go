@@ -99,6 +99,12 @@ func (s *OAuthStorage) RemoveAuthorize(code string) error {
 
 func (s *OAuthStorage) SaveAccess(data *osin.AccessData) error {
 	accesses := s.Session.DB(s.dbName).C(ACCESS_COL)
+	
+	//to avoid multiple nested previous record
+	if data.AccessData != nil {
+		data.AccessData.AccessData = nil
+	}
+
 	_, err := accesses.UpsertId(data.AccessToken, data)
 	return err
 }
@@ -110,10 +116,19 @@ func (s *OAuthStorage) LoadAccess(token string) (*osin.AccessData, error) {
 	authorizeData := osin.AuthorizeData{
 		Client: &newClient,
 	}
-
+	
+	prevNewClient := osin.DefaultClient{}
+	
+	//TODO: check overhere to avoid infitite recursive -- because client is interface
 	accData := osin.AccessData{
 		Client: &newClient,
 		AuthorizeData: &authorizeData,
+		AccessData: &osin.AccessData{
+			Client: &prevNewClient,
+			AuthorizeData: &osin.AuthorizeData{
+				Client: &prevNewClient,
+			},
+		},
 	}
 
 	genericAccessData := make(map[string]interface{})
@@ -149,9 +164,18 @@ func (s *OAuthStorage) LoadRefresh(token string) (*osin.AccessData, error) {
 		Client: &newClient,
 	}
 
+	prevNewClient := osin.DefaultClient{}
+
+	//TODO: check overhere to avoid infitite recursive -- because client is interface
 	accData := osin.AccessData{
 		Client: &newClient,
 		AuthorizeData: &authorizeData,
+		AccessData: &osin.AccessData{
+			Client: &prevNewClient,
+			AuthorizeData: &osin.AuthorizeData{
+				Client: &prevNewClient,
+			},
+		},
 	}
 
 	genericAccessData := make(map[string]interface{})
