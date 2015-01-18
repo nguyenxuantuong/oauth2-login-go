@@ -54,5 +54,6 @@ func Init(){
 	InitDB()
 	InitRedis()
 	InitMgo()
+	InitOAuthServer()
 }
 

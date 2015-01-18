@@ -37,6 +37,10 @@ POST    /api/user/unlinkAccountWithGoogle               Auth.UnlinkAccountWithGo
 #Get user info in session
 POST 	/api/user/userInfo								Auth.UserInfo
 
+#OATH handler
+GET 	/api/oauth/authorize							Oauth.Authorize
+* 	    /api/oauth/token								Oauth.AccessToken
+
 # Ignore favicon requests
 GET     /favicon.ico                                404
 

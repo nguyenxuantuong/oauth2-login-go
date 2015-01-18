@@ -10,6 +10,7 @@ import (
 	"code.google.com/p/go.crypto/bcrypt"
 	"github.com/jinzhu/gorm"
 	"github.com/parnurzeal/gorequest"
+//	"auth/app/routes"
 	"fmt"
 	"time"
 )
@@ -153,6 +154,7 @@ func (c Auth) Login() revel.Result {
 	//otherwise, set session in redis
 	RCache.Set(sessionKey, user, SessionExpire)
 	
+	//otherwise; just return response as usual
 	return c.RenderJsonSuccess(user)
 }
 

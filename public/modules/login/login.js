@@ -83,11 +83,11 @@ loginApp.run(["$rootScope", "$state", "AUTH_EVENTS", "$q", "$window",
         });
     }]);
 
-loginApp.controller("LoginController", ['$rootScope', '$scope', '$q', '$http', 'Facebook', 'GooglePlus', function($rootScope, $scope, $q, $http, Facebook, GooglePlus){
+loginApp.controller("LoginController", ['$rootScope', '$scope', '$q', '$http', 'Facebook', 'GooglePlus', '$location', function($rootScope, $scope, $q, $http, Facebook, GooglePlus, $location){
     $scope.userInput = {};
 
     var isLogin = false;
-    
+
     $scope.login = function()
     {
         //avoid keypress twice
@@ -101,13 +101,25 @@ loginApp.controller("LoginController", ['$rootScope', '$scope', '$q', '$http', '
         setTimeout(function(){
             isLogin = false;
         }, 1300);
-        
+
+        //append whatever query string in the url to post request
         $http.post("/api/user/login", {
             email: $scope.userInput.email,
             password: CryptoJS.MD5($scope.userInput.password).toString()})
             .success(function(response) {
                 var data = response;
+                
+                if(data.error)
+                {
+                    return showError("Error happen " + data.error)   
+                }
 
+                //if logged in successfully + it's authorize request
+                if(location.search.indexOf("client_id") != -1 && location.search.indexOf("response_type") != -1){
+                    //redirect it to the authorize API
+                    window.location = window.location.origin + "/api/oath/authorize" + location.search;
+                }
+                
                 $rootScope.user = data;
                 //$rootScope.$broadcast(AUTH_EVENTS.loginSuccess, data);
             })
