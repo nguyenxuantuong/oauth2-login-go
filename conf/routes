@@ -7,6 +7,9 @@ module:testrunner
 # static router
 GET     /                                               App.Index
 GET     /login                                          App.Login
+GET     /register                                       App.Register
+GET     /activation                                     App.Activation
+GET     /passwordReset                                  App.PasswordReset
 
 # login & register
 POST    /api/user/register                              Auth.Register
@@ -46,6 +49,7 @@ GET     /favicon.ico                                404
 
 # Map static resources from the /app/public folder to the /public path
 GET     /public/*filepath                           Static.Serve("public")
+GET     /vendor/*filepath                           Static.Serve("public/vendor")
 
 # Catch all
 *       /:controller/:action                        :controller.:action

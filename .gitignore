@@ -5,3 +5,4 @@ app/routes/
 public/node_modules
 public/vendor
 public/.sass-cache
+web/node_modules

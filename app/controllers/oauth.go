@@ -59,6 +59,7 @@ func (c OAuth) Authorize() revel.Result {
 			//if user has logged in; allow him to get authorized code immediately
 			ar.Authorized = true
 			
+			//TODO: if you want to save userdata -- do it here; put into ar object which will be saved into storage
 			//we will alway force redirect using redirect url
 			OAuthServer.FinishAuthorizeRequest(resp, req, ar)
 		} else {
@@ -89,6 +90,8 @@ func (c OAuth) AccessToken() revel.Result {
 		//TODO: if we allow request access token; user-password grant type; then putting logic to check for user's credential overhere
 		//also can add same logic in case user has already logged in; and want to request for access_token; no user-password check logic in the handle-request method
 		grantType := c.Params.Get("grant_type")
+
+		//TODO: if you want to save userdata -- do it here; put into ar object which will be saved into storage
 		
 		if grantType == osin.PASSWORD {
 			if sessionUser.Id != 0 {

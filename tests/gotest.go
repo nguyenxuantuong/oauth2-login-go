@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"strings"
 	"unsafe"
+	"sort"
 )
 
 var _ = fmt.Printf
@@ -18,7 +19,7 @@ type GoTest struct {
 	revel.TestSuite
 }
 
-//multiple way to declare struct
+//FEATURE: Declare struct in GO
 func (t *GoTest) TestStruct() {
 	type Student struct{
 		Name string
@@ -141,6 +142,7 @@ func (t *GoTest) TestMarshallJsonDifferentKey(){
 	t.AssertNotEqual(strings.Index(s, "urlCustom"), -1)
 }
 
+//FEATURE: inheritance in go
 type Valueable interface {
 	Value() int64
 }
@@ -153,6 +155,7 @@ func (i *Parent) Value() int64 {
 	return i.value
 }
 
+//embeded delegation
 type Child struct{
 	Parent
 	multiplier int64
@@ -162,7 +165,7 @@ func (i Child) Value() int64 {
 	return i.value * i.multiplier
 }
 
-//NOTE: we need to use value overhere; not pointer?
+//NOTE: for interface, most of the time we pass using value (NOT pointer)
 func GetValue(c Valueable) int64{
 	return c.Value();
 }
@@ -203,3 +206,62 @@ func (t *GoTest) TestCastingPointer(){
 	var parentPtr2 *Parent = (*Parent)(cusPtr2)
 	t.AssertEqual(parentPtr2.Value(), 14)
 }
+
+
+//FEATURE: GO always pass by value
+type Student struct{
+	name string
+} 
+
+func alterStudent(student Student, newName string){
+	student.name = newName;
+}
+
+func alterStudentPointer(student *Student, newName string){
+	student.name = newName;
+}
+
+func (t *GoTest) TestPassByValue(){
+	var student = Student{"A"}
+	alterStudent(student, "B"); //pass by value
+	t.AssertEqual(student.name, "A");
+
+	//pass by pointer (still pass by value -- value of pointers)
+	alterStudentPointer(&student, "B");
+	t.AssertEqual(student.name, "B");
+}
+
+//FEATURE: Slice in go
+func (t *GoTest) TestSlice(){
+	s := make([]int, 3);
+	
+	//NOTE: only posfix operator; cannot do prefix
+	for i:=0; i<len(s); i++ {
+		s[i] = i;		
+	}
+
+	s = append(s, len(s));
+
+	t.AssertEqual(len(s), 4);
+	t.AssertEqual(s[3], 3);
+	
+	sc := make([]int, 4);
+	copy(sc, s);
+	t.AssertEqual(sc[3], 3);
+	
+	//reverse sort order
+	sort.Sort(sort.Reverse(sort.IntSlice(sc)));
+	t.AssertEqual(sc[0], 3);
+	
+	//increase sort order
+	sort.Sort(sort.IntSlice(sc));
+	t.AssertEqual(sc[0], 0);
+	
+	//can using range
+	for i, num := range(sc) {
+		t.AssertEqual(num, sc[i])
+	}
+	
+	fmt.Println(sc[0:len(sc)])
+}
+

@@ -1,0 +1,48 @@
+{
+  "name": "auth-sso-react",
+  "version": "0.0.2",
+  "description": "OAuth SSO React",
+  "repository": "",
+  "main": "js/app.js",
+  "dependencies": {
+    "async": "^0.9.0",
+    "flux": "^2.0.0",
+    "htmlescape": "^1.0.0",
+    "keymirror": "~0.1.0",
+    "lodash-node": "^2.4.1",
+    "log4js": "^0.6.22",
+    "node-jsx": "^0.12.4",
+    "object-assign": "^1.0.0",
+    "q": "^1.1.2",
+    "react": "^0.12.0",
+    "react-addons": "^0.9.1-deprecated",
+    "react-validation-mixin": "^4.0.4",
+    "route-builder": "0.0.1",
+    "superagent": "^0.21.0"
+  },
+  "devDependencies": {
+    "browserify": "^6.2.0",
+    "envify": "^3.0.0",
+    "jest-cli": "~0.1.17",
+    "reactify": "^0.15.2",
+    "uglify-js": "~2.4.15",
+    "watchify": "^2.1.1"
+  },
+  "scripts": {
+    "build-login": "browserify app/login.js --standalone Application --debug --outfile ../public/js/login.js",
+    "build-register": "browserify app/register.js --standalone Application --debug --outfile ../public/js/register.js",
+    "build-activation": "browserify app/account-activation.js --standalone Application --debug --outfile ../public/js/account-activation.js",
+    "build-forgot": "browserify app/forgot-password.js --standalone Application --debug --outfile ../public/js/forgot-password.js",
+    "test": "jest"
+  },
+  "author": "Stanley",
+  "browserify": {
+    "transform": [
+      "reactify",
+      "envify"
+    ]
+  },
+  "jest": {
+    "rootDir": "./app"
+  }
+}

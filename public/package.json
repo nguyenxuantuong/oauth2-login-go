@@ -53,5 +53,8 @@
   },
   "engines": {
     "node": "~0.10.1"
+  },
+  "scripts": {
+    "build-login": "browserify app/login.js --standalone Application --debug --outfile public/js/main.js",
   }
 }
