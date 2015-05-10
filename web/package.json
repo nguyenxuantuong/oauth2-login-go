@@ -33,6 +33,7 @@
     "build-register": "browserify app/register.js --standalone Application --debug --outfile ../public/js/register.js",
     "build-activation": "browserify app/account-activation.js --standalone Application --debug --outfile ../public/js/account-activation.js",
     "build-forgot": "browserify app/forgot-password.js --standalone Application --debug --outfile ../public/js/forgot-password.js",
+    "build-reset": "browserify app/reset-password.js --standalone Application --debug --outfile ../public/js/reset-password.js",
     "test": "jest"
   },
   "author": "Stanley",

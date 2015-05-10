@@ -9,7 +9,8 @@ GET     /                                               App.Index
 GET     /login                                          App.Login
 GET     /register                                       App.Register
 GET     /activation                                     App.Activation
-GET     /passwordReset                                  App.PasswordReset
+GET     /resetPassword                                  App.ResetPassword
+GET     /forgotPassword                                 App.ForgotPassword
 
 # login & register
 POST    /api/user/register                              Auth.Register

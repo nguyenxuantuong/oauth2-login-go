@@ -9,11 +9,20 @@ if (process.env.NODE_ENV !== 'production' &&
  */
 var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
 var React = require('react');
+var addons = require('react-addons');
+var ValidationMixin = require('react-validation-mixin');
+var Joi = require('joi');
+var cx = require('react/lib/cx');
 
-var Register = React.createClass({
+var ForgotPassword = React.createClass({
+    mixins: [ValidationMixin, addons.LinkedStateMixin],
+    validatorTypes:  {
+        email: Joi.string().email().label('Email')
+    },
     getInitialState: function() {
         return {
-
+            email: null,
+            emailSent: false
         };
     },
     componentDidMount: function() {
@@ -22,22 +31,58 @@ var Register = React.createClass({
     componentWillUnmount: function() {
 
     },
+    renderHelpText: function(message) {
+        return (
+            <span className="help-block">{message}</span>
+        );
+    },
+    getClasses: function(field) {
+        return addons.classSet({
+            'form-group': true,
+            'has-error': !this.isValid(field)
+        });
+    },
+    handleReset: function(event) {
+        event.preventDefault();
+        this.clearValidations();
+        this.setState(this.getInitialState());
+    },
+    handleSubmit: function(event) {
+        event.preventDefault();
+        var onValidate = function(error, validationErrors) {
+            if (error) {
+                this.setState({
+                    feedback: 'Form is invalid do not submit'
+                });
+            } else {
+                //now post to server to register
+                console.log("Current state", this.state);
+            }
+        }.bind(this);
+        this.validate(onValidate);
+    },
     render: function() {
+        var that = this;
+
         return (
             <div>
-                <form className="forget-form"
-                      ng-show="formSwitch=='forgot-password'"
-                      name="forgotPasswordForm"
+                <form name="forgotPasswordForm"
                       className="form-vertical forget-form"
-                      method="post">
+                      method="post" onSubmit={this.handleSubmit}>
                     <h3 className="primary-text bold">Reset Password ?</h3>
 
-                    <div className="row alert alert-danger" ng-show="forgotPasswordForm.errorMessage">
+                    <div className={cx({
+                            'hidden': !that.state.feedback,
+                            'row': 1, 'alert':1, 'alert-danger': 1
+                        })}>
                         <i className="fa fa-info-circle info"></i>
-                        <span></span>
+                        <span>{that.state.feedback}</span>
                     </div>
 
-                    <div ng-show="forgotPasswordForm.passwordResetSent" className="row alert alert-info password-reset-sent">
+                    <div className={cx({
+                            'hidden': !that.state.emailSent,
+                            'row alert alert-info password-reset-sent': 1
+                        })}>
                         <i className="fa fa-info-circle info"></i>
                         An email has been sent to you. Please follow the instructions provided in the email to reset your password.
                     </div>
@@ -45,84 +90,26 @@ var Register = React.createClass({
                     <p>
                         A link to reset your password will be sent there
                     </p>
-                    <div className="form-group">
-                        <label className="text-danger help-inline help-small no-left-padding"
-                               ng-show="forgotPasswordForm.submitted && forgotPasswordForm.email.$invalid">
-                            The email is invalid.
-                        </label>
+
+                    <div className={this.getClasses('email')}>
                         <input className="form-control placeholder-no-fix"
                                type="email"
-                               ng-model="resetEmail"
+                               id='email'
+                               valueLink={this.linkState('email')} onBlur={this.handleValidation('email')}
                                autocomplete="off" placeholder="Email to send password to"
                                autofocus required
                                name="email"/>
+                        {this.getValidationMessages('email').map(this.renderHelpText)}
                     </div>
 
                     <div className="form-actions">
-                        <a type="button" ui-sref="login" id="back-btn" className="btn btn-default">BACK</a>
+                        <a type="button" href="/login" id="back-btn" className="btn btn-default">BACK</a>
                         <button type="submit"
-                                ng-disabled="forgotPasswordForm.passwordResetSent"
                                 className="btn btn-main uppercase pull-right">Submit</button>
                     </div>
 
                     <div className="bottom-bar"> </div>
                 </form>
-
-                <form ng-show="formSwitch=='reset-password'"
-                      name="resetPasswordForm" className="form-vertical forget-form"
-                      ng-submit="(resetPasswordForm.submitted=true) && resetPasswordForm.$valid && resetPassword(newPassword)">
-
-                    <h3 className="primary-text bold">Reset Password ?</h3>
-
-                    <div className="row alert alert-danger" ng-show="resetPasswordForm.errorMessage">
-                        <i className="fa fa-info-circle info"></i>
-                        <span ng-bind="resetPasswordForm.errorMessage"></span>
-                    </div>
-
-                    <div ng-show="resetPasswordForm.resetSuccess" className="row alert alert-info password-reset-sent">
-                        <i className="fa fa-info-circle info"></i>
-                        Your password has been successfully reset. Click
-                        <a ui-sref="login"><strong>here</strong></a> to go to the login page.
-                    </div>
-
-                    <span ng-hide="!!resetPasswordForm.resetSuccess">
-                        <p>
-                            Please enter your new password.
-                        </p>
-
-                        <div className="form-group">
-                            <label className="text-danger help-inline help-small no-left-padding"
-                                   ng-show="resetPasswordForm.submitted && resetPasswordForm.password.$invalid">
-                                Password must be at least 6 characters long.
-                            </label>
-                            <input className="form-control"
-                                   type="password" autocomplete="off"
-                                   placeholder="Password" name="password" required/>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="text-danger help-inline help-small no-left-padding"
-                                   ng-show="resetPasswordForm.submitted && resetPasswordForm.confirmPassword.$invalid">
-                                The passwords are different.
-                            </label>
-                            <input className="form-control"
-                                   type="password" autocomplete="off"
-                                   placeholder="Re-type Your Password"
-                                   ng-model="confirmPassword"
-                                   name="confirmPassword" required/>
-                        </div>
-
-                        <div className="form-actions">
-                            <a type="button" ui-sref="login" className="btn btn-default">BACK</a>
-                            <button type="submit"
-                                    ng-disabled="resetPasswordForm.resetSuccess"
-                                    className="btn btn-main uppercase pull-right">Submit</button>
-                        </div>
-                    </span>
-
-                    <div className="bottom-bar"> </div>
-                </form>
-
             </div>
         );
     }
@@ -131,6 +118,6 @@ var Register = React.createClass({
 //for-now, always run in browser so it might be not necessary
 if (ExecutionEnvironment.canUseDOM) {
     var rootElement = document.getElementById("react-root");
-    React.render(Register(), rootElement);
+    React.render(ForgotPassword(), rootElement);
 }
 

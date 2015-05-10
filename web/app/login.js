@@ -108,7 +108,7 @@ var Login = React.createClass({
                                        style={{"margin-left": "-7px", "margin-right": "7px;"}}
                                        name="remember" valueLink={this.linkState('rememberMe')}/>
                                 Keep me logged in</label>
-                            <a href="/passwordReset" id="forget-password" className="forget-password">Reset Password?</a>
+                            <a href="/forgotPassword" id="forget-password" className="forget-password">Reset Password?</a>
                         </div>
 
                         <div>

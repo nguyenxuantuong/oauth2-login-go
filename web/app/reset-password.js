@@ -14,7 +14,7 @@ var ValidationMixin = require('react-validation-mixin');
 var Joi = require('joi');
 var cx = require('react/lib/cx');
 
-var AccountActivation = React.createClass({
+var ResetPassword = React.createClass({
     mixins: [ValidationMixin, addons.LinkedStateMixin],
     validatorTypes:  {
         email: Joi.string().email().label('Email Address'),
@@ -26,7 +26,7 @@ var AccountActivation = React.createClass({
             email: null,
             password: null,
             verifyPassword: null,
-            activateSuccess: false
+            resetSuccess: false
         };
     },
     componentDidMount: function() {
@@ -70,9 +70,9 @@ var AccountActivation = React.createClass({
 
         return (
             <div>
-                <form className="form-vertical forget-form"
-                    name="accountActivationForm" method="post" role="form" onSubmit={this.handleSubmit}>
-                    <h3 className="primary-text bold"> Account Activation</h3>
+                <form name="resetPasswordForm" className="form-vertical forget-form" onSubmit={this.handleSubmit}>
+
+                    <h3 className="primary-text bold">Reset Password ?</h3>
 
                     <div className={cx({
                             'hidden': !that.state.feedback,
@@ -83,28 +83,27 @@ var AccountActivation = React.createClass({
                     </div>
 
                     <div className={cx({
-                            'hidden': !that.state.activateSuccess,
+                            'hidden': !that.state.resetSuccess,
                             'row alert alert-info password-reset-sent': 1
                         })}>
                         <i className="fa fa-info-circle info"></i>
-                        Your account has been successfully activated. Click
+                        Your password has been successfully reset. Click
                         <a href="/login"><strong>here</strong></a> to go to the login page.
                     </div>
 
-                        <span className={cx({
-                            'hidden': !!that.state.activateSuccess
+                    <span className={cx({
+                            'hidden': !!that.state.resetSuccess
                         })}>
                         <p>
-                            Enter your desired password to activate
+                            Please enter your new password.
                         </p>
 
                         <div className={this.getClasses('password')}>
                             <input className="form-control"
                                    type="password" autocomplete="off"
-                                   placeholder="Password"
-                                   name="password" required
+                                   placeholder="Password" name="password" required
                                    valueLink={this.linkState('password')} onBlur={this.handleValidation('password')} />
-                            <span className={cx({
+                             <span className={cx({
                             'hidden': this.getValidationMessages('password').length==0
                             })}>
                                 {["\"Password\" is in incorrect format"].map(this.renderHelpText)}
@@ -117,7 +116,7 @@ var AccountActivation = React.createClass({
                                    placeholder="Re-type Your Password"
                                    valueLink={this.linkState('verifyPassword')} onBlur={this.handleValidation('verifyPassword')}
                                    name="confirmPassword" required/>
-                            <span className={cx({
+                             <span className={cx({
                                 'hidden': this.getValidationMessages('verifyPassword').length==0
                                  })}>
                                 {["\"Password\" does not match"].map(this.renderHelpText)}
@@ -125,11 +124,15 @@ var AccountActivation = React.createClass({
                         </div>
 
                         <div className="form-actions">
+                            <a type="button" href="/login" className="btn btn-default">BACK</a>
                             <button type="submit"
-                                    className="btn btn-main uppercase pull-right">Activate</button>
+                                    className="btn btn-main uppercase pull-right">Submit</button>
                         </div>
                     </span>
+
+                    <div className="bottom-bar"> </div>
                 </form>
+
             </div>
         );
     }
@@ -138,5 +141,6 @@ var AccountActivation = React.createClass({
 //for-now, always run in browser so it might be not necessary
 if (ExecutionEnvironment.canUseDOM) {
     var rootElement = document.getElementById("react-root");
-    React.render(AccountActivation(), rootElement);
+    React.render(ResetPassword(), rootElement);
 }
+
