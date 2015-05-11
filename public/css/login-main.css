@@ -11203,6 +11203,9 @@ Login page
   .login .btn {
     border-radius: 5px !important; }
 
+.alert.alert-danger .fa.fa-info-circle.info {
+  margin-right: 10px; }
+
 .login .logo {
   margin: 0 auto;
   margin-top: 200px;

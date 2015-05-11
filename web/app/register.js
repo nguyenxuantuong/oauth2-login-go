@@ -13,12 +13,14 @@ var addons = require('react-addons');
 var ValidationMixin = require('react-validation-mixin');
 var Joi = require('joi');
 var cx = require('react/lib/cx');
+var superagent = require("superagent");
+var Q = require("q");
 
 var Register = React.createClass({
     mixins: [ValidationMixin, addons.LinkedStateMixin],
     validatorTypes:  {
         fullName: Joi.string().required().label('Full Name'),
-        username:  Joi.string().alphanum().min(3).max(30).required().label('Username'),
+        userName:  Joi.string().alphanum().min(3).max(30).required().label('Username'),
         email: Joi.string().email().label('Email Address'),
         password: Joi.string().regex(/[a-zA-Z0-9]{3,30}/).label('Password'),
         verifyPassword: Joi.any().valid(Joi.ref('password')).required().label('Password Confirmation')
@@ -26,7 +28,7 @@ var Register = React.createClass({
     getInitialState: function() {
         return {
             fullName: null,
-            username: null,
+            userName: null,
             email: null,
             password: null,
             verifyPassword: null,
@@ -57,6 +59,8 @@ var Register = React.createClass({
         this.setState(this.getInitialState());
     },
     handleSubmit: function(event) {
+        var that = this;
+
         event.preventDefault();
         var onValidate = function(error, validationErrors) {
             if (error) {
@@ -66,30 +70,59 @@ var Register = React.createClass({
             } else {
                 //now post to server to register
                 console.log("Current state", this.state);
+
+                Q.ninvoke(superagent.post("/api/user/register")
+                    .send({
+                        full_name: this.state.fullName,
+                        user_name: this.state.userName,
+                        email: this.state.email,
+                        password: this.state.password
+                    })
+                    .set('Accept', 'application/json'), "end")
+                .then(function(response){
+                        var body = response.body;
+                        if(body.status === "success"){
+                            console.log("Register successfully", body.data);
+                        }
+                        else
+                        {
+                            that.setState({feedback : body.errors || "Unable to register new account. Please try again later."});
+                        }
+                    })
             }
         }.bind(this);
         this.validate(onValidate);
     },
     render: function() {
+        var that = this;
+
         return (
             <div>
                 <form className="login-form" name="loginForm" method="post" onSubmit={this.handleSubmit}>
                     <h3 className="form-title primary-text bold">Register</h3>
+
+                    <div className={cx({
+                            'hidden': !that.state.feedback,
+                            'alert':1, 'alert-danger': 1
+                        })}>
+                        <i className="fa fa-info-circle info"></i>
+                        <span>{that.state.feedback}</span>
+                    </div>
 
                     <div className="alert alert-danger display-hide">
                         <button className="close" data-close="alert"></button>
                         <span>Enter any username and password. </span>
                     </div>
 
-                    <div className={this.getClasses('username')}>
+                    <div className={this.getClasses('userName')}>
                         <label className="control-label visible-ie8 visible-ie9">Username</label>
                         <input className="form-control placeholder-no-fix"
                                autofocus
-                               id="username"
+                               id="userName"
                                type="text" autocomplete="off"
-                               placeholder="Enter your username" name="username"
-                               valueLink={this.linkState('username')} onBlur={this.handleValidation('username')}/>
-                        {this.getValidationMessages('username').map(this.renderHelpText)}
+                               placeholder="Enter your username" name="userName"
+                               valueLink={this.linkState('userName')} onBlur={this.handleValidation('userName')}/>
+                        {this.getValidationMessages('userName').map(this.renderHelpText)}
                     </div>
 
                     <div className={this.getClasses('email')}>

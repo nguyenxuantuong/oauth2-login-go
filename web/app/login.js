@@ -13,6 +13,8 @@ var addons = require('react-addons');
 var ValidationMixin = require('react-validation-mixin');
 var Joi = require('joi');
 var cx = require('react/lib/cx');
+var Q = require("q");
+var superagent = require("superagent");
 
 var Login = React.createClass({
     mixins: [ValidationMixin, addons.LinkedStateMixin],
@@ -50,6 +52,8 @@ var Login = React.createClass({
         this.setState(this.getInitialState());
     },
     handleSubmit: function(event) {
+        var that = this;
+
         event.preventDefault();
         var onValidate = function(error, validationErrors) {
             if (error) {
@@ -59,15 +63,42 @@ var Login = React.createClass({
             } else {
                 //now post to server to register
                 console.log("Current state", this.state);
+
+                Q.ninvoke(superagent.post("/api/user/login")
+                    .send({
+                        email: this.state.email,
+                        password: this.state.password
+                    })
+                    .set('Accept', 'application/json'), "end")
+                    .then(function(response){
+                        var body = response.body;
+                        if(body.status === "success"){
+                            console.log("Register successfully", body.data);
+                        }
+                        else
+                        {
+                            that.setState({feedback : body.errors || "Unable to login. Please try again later."});
+                        }
+                    })
             }
         }.bind(this);
         this.validate(onValidate);
     },
     render: function() {
+        var that = this;
+
         return (
             <div>
                 <form className="login-form" name="loginForm" method="post" onSubmit={this.handleSubmit}>
                     <h3 className="form-title primary-text bold">Login</h3>
+                    <div className={cx({
+                            'hidden': !that.state.feedback,
+                            'alert':1, 'alert-danger': 1
+                        })}>
+                        <i className="fa fa-info-circle info"></i>
+                        <span>{that.state.feedback}</span>
+                    </div>
+
                     <div className="alert alert-danger display-hide">
                         <button className="close" data-close="alert"></button>
                         <span>

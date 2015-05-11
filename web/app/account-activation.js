@@ -76,7 +76,7 @@ var AccountActivation = React.createClass({
 
                     <div className={cx({
                             'hidden': !that.state.feedback,
-                            'row': 1, 'alert':1, 'alert-danger': 1
+                            'alert':1, 'alert-danger': 1
                         })}>
                         <i className="fa fa-info-circle info"></i>
                         <span>{that.state.feedback}</span>

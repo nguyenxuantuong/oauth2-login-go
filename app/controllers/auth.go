@@ -37,7 +37,7 @@ func (c Auth) Register() revel.Result {
 
 	// Handle errors
 	if c.Validation.HasErrors() {
-		return c.RenderJson(c.Validation.Errors)
+		return c.RenderJsonError(c.Validation.Errors)
 	}
 
 	//check if there is user with same username or email
