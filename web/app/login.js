@@ -74,6 +74,8 @@ var Login = React.createClass({
                         var body = response.body;
                         if(body.status === "success"){
                             console.log("Register successfully", body.data);
+                            //redirect user into home page
+                            window.location = "/home";
                         }
                         else
                         {
@@ -158,9 +160,6 @@ var Login = React.createClass({
                             </li>
                             <li>
                                 <a className="social-icon-color googleplus" data-original-title="Goole Plus" href="#"></a>
-                            </li>
-                            <li>
-                                <a className="social-icon-color linkedin" data-original-title="Linkedin" href="#"></a>
                             </li>
                         </ul>
                     </div>

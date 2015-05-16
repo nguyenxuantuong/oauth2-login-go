@@ -13,11 +13,13 @@ var addons = require('react-addons');
 var ValidationMixin = require('react-validation-mixin');
 var Joi = require('joi');
 var cx = require('react/lib/cx');
+var superagent = require("superagent");
+var Q = require("q");
+var pathToRegexp = require('path-to-regexp')
 
 var ResetPassword = React.createClass({
     mixins: [ValidationMixin, addons.LinkedStateMixin],
     validatorTypes:  {
-        email: Joi.string().email().label('Email Address'),
         password: Joi.string().regex(/[a-zA-Z0-9]{3,30}/).label('Password'),
         verifyPassword: Joi.any().valid(Joi.ref('password')).required().label('Password Confirmation')
     },
@@ -53,6 +55,8 @@ var ResetPassword = React.createClass({
     },
     handleSubmit: function(event) {
         event.preventDefault();
+        var that = this;
+
         var onValidate = function(error, validationErrors) {
             if (error) {
                 this.setState({
@@ -61,6 +65,36 @@ var ResetPassword = React.createClass({
             } else {
                 //now post to server to register
                 console.log("Current state", this.state);
+                var keys = []
+                var re = pathToRegexp('/resetPassword/:key', keys)
+
+                var match = re.exec(window.location.pathname)
+                if(match.length < 2){
+                    return that.setState({feedback: "Missing reset password key"})
+                }
+
+                var resetKey = match[1].split("?")[0];
+
+                console.log("Current state", this.state);
+
+                Q.ninvoke(superagent.post("/api/user/resetPassword/" + resetKey)
+                    .query({
+                        newPassword: that.state.password
+                    })
+                    .set('Accept', 'application/json'), "end")
+                    .then(function(response){
+                        var body = response.body;
+                        if(body.status === "success"){
+                            console.log("Reset successfully", body.data);
+
+                            //TODO: now redirect to the home page or any redirectUrl page; or just show successful page
+                            that.setState({resetSuccess: true})
+                        }
+                        else
+                        {
+                            that.setState({feedback : body.errors || "Unable to activate the account. Please try again later."});
+                        }
+                    })
             }
         }.bind(this);
         this.validate(onValidate);
@@ -75,7 +109,7 @@ var ResetPassword = React.createClass({
                     <h3 className="primary-text bold">Reset Password ?</h3>
 
                     <div className={cx({
-                            'hidden': !that.state.feedback,
+                            'hidden': !that.state.feedback || !!that.state.resetSuccess,
                             'alert':1, 'alert-danger': 1
                         })}>
                         <i className="fa fa-info-circle info"></i>
@@ -88,7 +122,7 @@ var ResetPassword = React.createClass({
                         })}>
                         <i className="fa fa-info-circle info"></i>
                         Your password has been successfully reset. Click
-                        <a href="/login"><strong>here</strong></a> to go to the login page.
+                        <a href="/login"><strong> here</strong></a> to go to the login page.
                     </div>
 
                     <span className={cx({

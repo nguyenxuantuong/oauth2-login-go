@@ -7,3 +7,4 @@ public/vendor
 public/.sass-cache
 public/js
 web/node_modules
+*npm-debug.log

@@ -13,17 +13,18 @@ var addons = require('react-addons');
 var ValidationMixin = require('react-validation-mixin');
 var Joi = require('joi');
 var cx = require('react/lib/cx');
+var superagent = require("superagent");
+var Q = require("q");
+var pathToRegexp = require('path-to-regexp')
 
 var AccountActivation = React.createClass({
     mixins: [ValidationMixin, addons.LinkedStateMixin],
     validatorTypes:  {
-        email: Joi.string().email().label('Email Address'),
         password: Joi.string().regex(/[a-zA-Z0-9]{3,30}/).label('Password'),
         verifyPassword: Joi.any().valid(Joi.ref('password')).required().label('Password Confirmation')
     },
     getInitialState: function() {
         return {
-            email: null,
             password: null,
             verifyPassword: null,
             activateSuccess: false
@@ -53,6 +54,8 @@ var AccountActivation = React.createClass({
     },
     handleSubmit: function(event) {
         event.preventDefault();
+        var that = this;
+
         var onValidate = function(error, validationErrors) {
             if (error) {
                 this.setState({
@@ -60,7 +63,36 @@ var AccountActivation = React.createClass({
                 });
             } else {
                 //now post to server to register
+                //now using regex to get the activation key
+                var keys = []
+                var re = pathToRegexp('/activation/:key', keys)
+
+                var match = re.exec(window.location.pathname)
+                if(match.length < 2){
+                    return that.setState({feedback: "Missing activation key"})
+                }
+
+                var activationKey = match[1].split("?")[0];
+
                 console.log("Current state", this.state);
+
+                Q.ninvoke(superagent.post("/api/user/activateAccount/" + activationKey)
+                    .send({
+                        activationKey: activationKey
+                    })
+                    .set('Accept', 'application/json'), "end")
+                    .then(function(response){
+                        var body = response.body;
+                        if(body.status === "success"){
+                            console.log("Activation successfully", body.data);
+
+                            //TODO: now redirect to the home page or any redirectUrl page; or just show successful page
+                        }
+                        else
+                        {
+                            that.setState({feedback : body.errors || "Unable to activate the account. Please try again later."});
+                        }
+                    })
             }
         }.bind(this);
         this.validate(onValidate);

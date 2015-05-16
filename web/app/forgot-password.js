@@ -13,6 +13,8 @@ var addons = require('react-addons');
 var ValidationMixin = require('react-validation-mixin');
 var Joi = require('joi');
 var cx = require('react/lib/cx');
+var superagent = require("superagent");
+var Q = require("q");
 
 var ForgotPassword = React.createClass({
     mixins: [ValidationMixin, addons.LinkedStateMixin],
@@ -49,6 +51,8 @@ var ForgotPassword = React.createClass({
     },
     handleSubmit: function(event) {
         event.preventDefault();
+        var that = this;
+
         var onValidate = function(error, validationErrors) {
             if (error) {
                 this.setState({
@@ -57,6 +61,23 @@ var ForgotPassword = React.createClass({
             } else {
                 //now post to server to register
                 console.log("Current state", this.state);
+
+                Q.ninvoke(superagent.post("/api/user/requestPasswordReset")
+                    .query({
+                        email: this.state.email
+                    })
+                    .set('Accept', 'application/json'), "end")
+                    .then(function(response){
+                        var body = response.body;
+                        if(body.status === "success"){
+                            console.log("Register successfully", body.data);
+                            that.setState({emailSent: true})
+                        }
+                        else
+                        {
+                            that.setState({feedback : body.errors || "Unable to register new account. Please try again later."});
+                        }
+                    })
             }
         }.bind(this);
         this.validate(onValidate);
@@ -72,7 +93,7 @@ var ForgotPassword = React.createClass({
                     <h3 className="primary-text bold">Reset Password ?</h3>
 
                     <div className={cx({
-                            'hidden': !that.state.feedback,
+                            'hidden': !that.state.feedback || that.state.emailSent,
                             'alert':1, 'alert-danger': 1
                         })}>
                         <i className="fa fa-info-circle info"></i>
@@ -87,25 +108,29 @@ var ForgotPassword = React.createClass({
                         An email has been sent to you. Please follow the instructions provided in the email to reset your password.
                     </div>
 
-                    <p>
-                        A link to reset your password will be sent there
-                    </p>
+                    <div className={cx({
+                            'hidden': !!that.state.emailSent
+                        })}>
+                        <p>
+                            A link to reset your password will be sent there
+                        </p>
 
-                    <div className={this.getClasses('email')}>
-                        <input className="form-control placeholder-no-fix"
-                               type="email"
-                               id='email'
-                               valueLink={this.linkState('email')} onBlur={this.handleValidation('email')}
-                               autocomplete="off" placeholder="Email to send password to"
-                               autofocus required
-                               name="email"/>
-                        {this.getValidationMessages('email').map(this.renderHelpText)}
-                    </div>
+                        <div className={this.getClasses('email')}>
+                            <input className="form-control placeholder-no-fix"
+                                   type="email"
+                                   id='email'
+                                   valueLink={this.linkState('email')} onBlur={this.handleValidation('email')}
+                                   autocomplete="off" placeholder="Email to send password to"
+                                   autofocus required
+                                   name="email"/>
+                            {this.getValidationMessages('email').map(this.renderHelpText)}
+                        </div>
 
-                    <div className="form-actions">
-                        <a type="button" href="/login" id="back-btn" className="btn btn-default">BACK</a>
-                        <button type="submit"
-                                className="btn btn-main uppercase pull-right">Submit</button>
+                        <div className="form-actions">
+                            <a type="button" href="/login" id="back-btn" className="btn btn-default">BACK</a>
+                            <button type="submit"
+                                    className="btn btn-main uppercase pull-right">Submit</button>
+                        </div>
                     </div>
 
                     <div className="bottom-bar"> </div>

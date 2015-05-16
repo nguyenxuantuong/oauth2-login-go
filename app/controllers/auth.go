@@ -45,7 +45,7 @@ func (c Auth) Register() revel.Result {
 
 	if err := c.Txn.Where("email= ?", newUser.Email).Or("user_name= ?", newUser.UserName).Find(&existingUsers).Error; err != nil {
 		revel.INFO.Printf("error %s", err)
-		return c.RenderJsonError("Database Error")
+		return c.RenderJsonError("Internal Server Error")
 	}
 
 	if len(existingUsers) == 0 {
@@ -71,7 +71,7 @@ func (c Auth) Register() revel.Result {
 		accountActivation.ExpiryDate = time.Now().AddDate(0,0,3);
 		
 		if err := c.Txn.Create(&accountActivation).Error; err != nil {
-			return c.RenderJsonError("Database Error")
+			return c.RenderJsonError("Internal Server Error")
 		}
 
 		emailInfo := emails.EmailInfo{
@@ -82,7 +82,7 @@ func (c Auth) Register() revel.Result {
 			FromName: "Auth Team",
 		}
 
-		accountActivationLink :=  WebURL + "/accountActivation/" + accountActivation.ActivationKey;
+		accountActivationLink :=  WebURL + "/activation/" + accountActivation.ActivationKey;
 		
 		//activation key
 		emailPlaceHolder := emails.EmailPlaceHolder{
@@ -96,6 +96,8 @@ func (c Auth) Register() revel.Result {
 			err := emails.Send(emails.AccountActivation, emailInfo, emailPlaceHolder)
 			if err != nil {
 				revel.ERROR.Printf("error happen when sending email %s", err)
+			} else {
+				revel.INFO.Println("Sending activation email successfully")
 			}
 		}()
 		
@@ -112,13 +114,13 @@ func (c Auth) Login() revel.Result {
 	sessionKey = "s:user_"+c.Session.Id()
 
 	//if session is found; then return immediately
-	var sessionUser models.User
-	RCache.Get(sessionKey, &sessionUser)
-
-	//TODO: how to check if result is found
-	if sessionUser.Email != "" {
-		return c.RenderJsonSuccess(sessionUser)
-	}
+//	var sessionUser models.User
+//	RCache.Get(sessionKey, &sessionUser)
+//
+//	//TODO: how to check if result is found
+//	if sessionUser.Email != "" {
+//		return c.RenderJsonSuccess(sessionUser)
+//	}
 
 	//prefer to use model + json decode because it's enable mapping case insensitive
 	var requestUser = models.User{}
@@ -145,10 +147,10 @@ func (c Auth) Login() revel.Result {
 	if user.Status != models.USER_ACTIVE {
 		return c.RenderJsonError("User was not activated. If you are new user, please check your email for activation link");
 	}
-	
+
 	//compare password to validate the user
 	if err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(requestUser.Password)); err != nil {
-		return c.RenderJsonError("Unable to login. Passwords are miss-match");
+		return c.RenderJsonError("Unable to login. Passwords are miss-matched");
 	}
 
 	//otherwise, set session in redis
@@ -209,7 +211,11 @@ func (c Auth) ActivateAccount() revel.Result {
 //request password reset being sent
 func (c Auth) RequestPasswordReset() revel.Result {
 	var email = c.Params.Get("email")
-	
+
+	if email == "" {
+		return c.RenderJsonError("Please fill in the email field");
+	}
+
 	var user = models.User{}
 	//check user withe email exist
 	if Gdb.Where("email = ?", email).First(&user).RecordNotFound() {
@@ -235,7 +241,7 @@ func (c Auth) RequestPasswordReset() revel.Result {
 		FromName: "Auth Team",
 	}
 
-	passwordResetLink :=  WebURL + "/login.html#passwordReset/" + passwordReset.PasswordResetKey;
+	passwordResetLink :=  WebURL + "/resetPassword/" + passwordReset.PasswordResetKey;
 
 	//activation key
 	emailPlaceHolder := emails.EmailPlaceHolder{
@@ -249,6 +255,8 @@ func (c Auth) RequestPasswordReset() revel.Result {
 		err := emails.Send(emails.PasswordReset, emailInfo, emailPlaceHolder)
 		if err != nil {
 			revel.ERROR.Printf("error happen when sending email %s", err)
+		} else {
+			revel.INFO.Printf("Password reset has been sent to email %s", email)
 		}
 	}()
 	
@@ -261,6 +269,12 @@ func (c Auth) ResetPassword() revel.Result {
 	//password reset key
 	var passwordResetKey = c.Params.Get("passwordResetKey")
 	var newPassword	= c.Params.Get("newPassword")
+
+	if newPassword == "" {
+		return c.RenderJsonError("Missing new password")
+	}
+
+	revel.INFO.Println("Req params", passwordResetKey, newPassword)
 
 	//check if activation key exist
 	var passwordReset models.PasswordReset
@@ -287,12 +301,13 @@ func (c Auth) ResetPassword() revel.Result {
 
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newPassword), 10)
 
-	//assign hash, encrypted password for the new users
+//	assign hash, encrypted password for the new users
 	existingUser.HashedPassword = hashedPassword
 	existingUser.Password = ""
 
+	revel.INFO.Println("Existing User", existingUser)
 
-	if err := Gdb.Save(&existingUser); err != nil {
+	if err := Gdb.Save(&existingUser).Error; err != nil {
 		return c.RenderJsonError("Internal Database error");
 	}
 
@@ -327,7 +342,7 @@ func (c Auth) ChangePassword() revel.Result {
 	}
 
 	if bcrypt.CompareHashAndPassword(existingUser.HashedPassword, []byte(oldPassword)) != nil {
-		return c.RenderJsonError("Please fill in  your existing password correctly")
+		return c.RenderJsonError("Please fill in your existing password correctly")
 	}
 
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newPassword), 10)
@@ -335,7 +350,6 @@ func (c Auth) ChangePassword() revel.Result {
 	//assign hash, encrypted password for the new users
 	existingUser.HashedPassword = hashedPassword
 	existingUser.Password = ""
-
 
 	if err := Gdb.Save(&existingUser).Error; err != nil {
 		return c.RenderJsonError("Internal Database error");

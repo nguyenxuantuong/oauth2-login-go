@@ -6,10 +6,11 @@ module:testrunner
 
 # static router -- rendered html page
 GET     /                                               App.Index
+GET     /home                                           App.Home
 GET     /login                                          App.Login
 GET     /register                                       App.Register
-GET     /activation                                     App.Activation
-GET     /resetPassword                                  App.ResetPassword
+GET     /activation/:activationKey                      App.Activation
+GET     /resetPassword/:resetKey                        App.ResetPassword
 GET     /forgotPassword                                 App.ForgotPassword
 
 # third-party oauth2 integration

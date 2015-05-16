@@ -9,6 +9,8 @@ import (
 	"auth/app/models"
 	"auth/app/utils"
 	"github.com/mrjones/oauth"
+	"github.com/jinzhu/gorm"
+	"time"
 )
 
 var _ = fmt.Printf
@@ -20,6 +22,23 @@ type App struct {
 //index path
 func (c App) Index() revel.Result {
 	return c.RenderTemplate("App/Index.html")
+}
+
+func (c App) Home() revel.Result {
+	//only allow authenticated user to login
+	//TODO: move it into a seperated middleware
+	var sessionKey string
+	sessionKey = "s:user_" + c.Session.Id()
+
+	var sessionUser models.User
+	RCache.Get(sessionKey, &sessionUser)
+
+	//if user doesn't login -- redirect him into the login page
+	if sessionUser.Id == 0 {
+		return c.Redirect(App.Login)
+	}
+
+	return c.RenderTemplate("Home/Home.html")
 }
 
 //normal login flow
@@ -34,7 +53,51 @@ func (c App) Register() revel.Result {
 
 //account activation
 func (c App) Activation() revel.Result {
-	return c.RenderTemplate("AccountActivation/AccountActivation.html")
+	var activationKey = c.Params.Get("activationKey");
+
+	//check if activation key exist
+	var accountActivation models.AccountActivation
+	if err := Gdb.Where("activation_key=?", activationKey).First(&accountActivation).Error; err != nil {
+		if err == gorm.RecordNotFound {
+			return c.RenderBadRequest("Invalid activation key");
+		} else {
+			return c.RenderBadRequest("Internal Database error");
+		}
+	}
+
+	//key is already expired
+	if accountActivation.ExpiryDate.Before(time.Now()) {
+		return c.RenderBadRequest("Activation key has already been expired")
+	}
+
+	//if there is activation key; then activate the user
+	var userId = accountActivation.UserId
+	var existingUser = models.User{}
+
+	if err := Gdb.Where("id=?", userId).First(&existingUser).Error; err != nil {
+		return c.RenderBadRequest("User does not exist")
+	}
+
+	existingUser.Status = models.USER_ACTIVE;
+
+	if err := Gdb.Save(&existingUser).Error; err != nil {
+		return c.RenderInternalServerError();
+	}
+
+	var sessionKey string
+	sessionKey = "s:user_"+c.Session.Id()
+
+	//everything ok, redirect him into home page or redirect URL
+	//set the cache of the users
+	RCache.Set(sessionKey, existingUser.Sanitize(), SessionExpire)
+
+	//Now; delete the activation key
+	if err := Gdb.Delete(&accountActivation).Error; err != nil {
+		return c.RenderInternalServerError()
+	}
+
+	//TODO: if there is redirect url; redirect him back to the main app; otherwise, log him in the Oauth CMS
+	return c.Redirect(App.Home)
 }
 
 //type new password using the password reset link
@@ -141,7 +204,7 @@ func (c App) LoginByTwitter() revel.Result {
 			RCache.Set(sessionKey, users[0], SessionExpire)
 
 			//TODO: check redirect URL; if not redirect user into home page of Oath CMS
-			return c.RenderTemplate("Home/Home.html")
+			return c.Redirect(App.Home)
 		} else {
 			//if user haven't activated account before, we show the bad request instead
 			return c.RenderBadRequest(err)
@@ -169,7 +232,7 @@ func (c App) LoginByTwitter() revel.Result {
 	RCache.Set(sessionKey, newUser, SessionExpire)
 
 	//TODO: if there is redirect url; redirect him back to the main app; otherwise, log him in the Oauth CMS
-	return c.RenderTemplate("Home/Home.html")
+	return c.Redirect(App.Home)
 }
 
 //login using facebook
@@ -264,7 +327,7 @@ func (c App) LoginByFacebook() revel.Result {
 			RCache.Set(sessionKey, users[0], SessionExpire)
 
 			//TODO: check redirect URL; if not redirect user into home page of Oath CMS
-			return c.RenderTemplate("Home/Home.html")
+			return c.Redirect(App.Home)
 		} else {
 			//if user haven't activated account before, we show the bad request instead
 			return c.RenderBadRequest(err)
@@ -292,7 +355,7 @@ func (c App) LoginByFacebook() revel.Result {
 	RCache.Set(sessionKey, newUser, SessionExpire)
 
 	//TODO: if there is redirect url; redirect him back to the main app; otherwise, log him in the Oauth CMS
-	return c.RenderTemplate("Home/Home.html")
+	return c.Redirect(App.Home)
 }
 
 func (c App) LoginByGoogle() revel.Result {
@@ -391,7 +454,7 @@ func (c App) LoginByGoogle() revel.Result {
 			RCache.Set(sessionKey, users[0], SessionExpire)
 
 			//TODO: check redirect URL; if not redirect user into home page of Oath CMS
-			return c.RenderTemplate("Home/Home.html")
+			return c.Redirect(App.Home)
 		} else {
 			//if user haven't activated account before, we show the bad request instead
 			return c.RenderBadRequest(err)
@@ -420,7 +483,7 @@ func (c App) LoginByGoogle() revel.Result {
 
 
 	//TODO: if there is redirect url; redirect him back to the main app; otherwise, log him in the Oauth CMS
-	return c.RenderTemplate("Home/Home.html")
+	return c.Redirect(App.Home)
 }
 
 
