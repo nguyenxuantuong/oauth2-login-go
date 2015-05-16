@@ -4,6 +4,7 @@ import (
 	"github.com/revel/revel"
 	"fmt"
 	"time"
+	"github.com/mrjones/oauth"
 )
 
 //For now, base controller is just an extension of revel controller
@@ -44,6 +45,8 @@ var (
 	WebURL string
 )
 
+var tokens map[string]*oauth.RequestToken
+
 func Init(){
 	//init session expire variable
 	var expireAfterDuration time.Duration
@@ -66,5 +69,8 @@ func Init(){
 	InitRedis()
 	InitMgo()
 	InitOAuthServer()
+
+	//TODO: save into redis
+	tokens = make(map[string]*oauth.RequestToken)
 }
 

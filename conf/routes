@@ -13,8 +13,9 @@ GET     /resetPassword                                  App.ResetPassword
 GET     /forgotPassword                                 App.ForgotPassword
 
 # third-party oauth2 integration
-#GET     /facebook/login                                 App.LoginByFacebook
+GET     /facebook/login                                 App.LoginByFacebook
 GET     /google/login                                   App.LoginByGoogle
+GET     /twitter/login                                  App.LoginByTwitter
 
 # manual login & register
 POST    /api/user/register                              Auth.Register
