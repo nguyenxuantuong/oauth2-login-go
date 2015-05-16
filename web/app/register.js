@@ -209,14 +209,14 @@ var Register = React.createClass({
                             <ul className="social-icons">
                                 <li>
                                     <a className="social-icon-color facebook"
-                                       data-original-title="facebook" href="#"></a>
+                                       data-original-title="facebook" href="/facebook/login"></a>
                                 </li>
                                 <li>
                                     <a className="social-icon-color twitter"
-                                       data-original-title="Twitter" href="#"></a>
+                                       data-original-title="Twitter" href="/twitter/login"></a>
                                 </li>
                                 <li>
-                                    <a className="social-icon-color googleplus" data-original-title="Goole Plus" href="#"></a>
+                                    <a className="social-icon-color googleplus" data-original-title="Goole Plus" href="/google/login"></a>
                                 </li>
                             </ul>
                         </div>

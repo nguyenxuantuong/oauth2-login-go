@@ -274,8 +274,6 @@ func (c Auth) ResetPassword() revel.Result {
 		return c.RenderJsonError("Missing new password")
 	}
 
-	revel.INFO.Println("Req params", passwordResetKey, newPassword)
-
 	//check if activation key exist
 	var passwordReset models.PasswordReset
 	if err := Gdb.Where("password_reset_key=?", passwordResetKey).First(&passwordReset).Error; err != nil {
@@ -305,10 +303,13 @@ func (c Auth) ResetPassword() revel.Result {
 	existingUser.HashedPassword = hashedPassword
 	existingUser.Password = ""
 
-	revel.INFO.Println("Existing User", existingUser)
-
 	if err := Gdb.Save(&existingUser).Error; err != nil {
 		return c.RenderJsonError("Internal Database error");
+	}
+
+	//Now; delete the activation key
+	if err := Gdb.Delete(&passwordReset).Error; err != nil {
+		return c.RenderInternalServerError()
 	}
 
 	var response struct{}

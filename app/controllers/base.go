@@ -45,6 +45,7 @@ var (
 	WebURL string
 )
 
+//TODO: remove this -- using redis instead -- don't have time to do it now
 var tokens map[string]*oauth.RequestToken
 
 func Init(){
