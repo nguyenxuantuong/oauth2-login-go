@@ -28,6 +28,17 @@ func (c BaseController) RenderJsonSuccess(data interface {}) revel.Result {
 	return c.RenderJson(Response{Status: "success", Data: data})
 }
 
+//bad request unknown error page
+func (c BaseController) RenderBadRequest(error interface {}) revel.Result {
+	revel.ERROR.Println(error)
+	c.RenderArgs["StackTrace"] = error;
+	return c.RenderTemplate("errors/500.html")
+}
+
+func (c BaseController) RenderInternalServerError() revel.Result {
+	return c.RenderTemplate("errors/500.html")
+}
+
 var (
 	SessionExpire time.Duration //default configuration -- keep time when session expired
 	WebURL string

@@ -4,7 +4,7 @@
 
 module:testrunner
 
-# static router
+# static router -- rendered html page
 GET     /                                               App.Index
 GET     /login                                          App.Login
 GET     /register                                       App.Register
@@ -12,7 +12,11 @@ GET     /activation                                     App.Activation
 GET     /resetPassword                                  App.ResetPassword
 GET     /forgotPassword                                 App.ForgotPassword
 
-# login & register
+# third-party oauth2 integration
+#GET     /facebook/login                                 App.LoginByFacebook
+GET     /google/login                                   App.LoginByGoogle
+
+# manual login & register
 POST    /api/user/register                              Auth.Register
 POST    /api/user/login                                 Auth.Login
 POST    /api/user/logout                                Auth.Logout

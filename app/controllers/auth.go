@@ -567,7 +567,7 @@ func (c Auth) RegisterUsingGoogle() revel.Result {
 		return c.RenderJsonSuccess(existingUser)
 	}
 
-	//otherwise just create new users
+	//otherwise just create new users -- oauth login/register doesn't need to activate the account
 	newUser := models.User{
 		FullName: name,
 		Email: email,
