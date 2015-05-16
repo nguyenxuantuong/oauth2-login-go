@@ -4,7 +4,18 @@ var bodyParser = require('koa-bodyparser');
 var http = require('http');
 var session = require('koa-generic-session');
 var redisStore = require('koa-redis');
-var logger = require('koa-logger')
+var logger = require('koa-logger');
+
+//Note: components using different react -- so need to require it from the web/ submodules
+//otherwise, React will throw nasty error
+var React   = require('./../web/node_modules/react');
+var JSX     = require('node-jsx').install({extension: '.jsx'});
+
+//some react component
+var Login = require("./../web/app/components/login.jsx")
+
+//kao-router
+var Router 		= require('koa-router');
 
 var app = koa();
 
@@ -20,6 +31,10 @@ app.use(session({
     store: redisStore()
 }));
 
+//static files
+//TODO: move to nginx
+app.use(require('koa-static')(__dirname + "/..", {maxAge: 3600000}));
+
 // koa-hbs is middleware. `use` it before you want to render a view
 app.use(hbs.middleware({
     viewPath: __dirname + '/views',
@@ -30,10 +45,22 @@ app.use(hbs.middleware({
     disableCache: true //TODO: disable it in production enviroment
 }));
 
-//main routes + handlers
-app.use(function *(){
+//declare a router and adding routes
+var router = new Router();
+router.get("/home", function*(){
     yield this.render('auth', {title: 'koa-oauth'});
-});
+})
+
+router.get("/render/login", function*(){
+    var markup = React.renderToString(
+        React.createElement(Login, {})
+    );
+
+    this.body = markup;
+})
+
+//main routes + handlers
+app.use(router.middleware());
 
 //listen for event
 app.listen(3000);
