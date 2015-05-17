@@ -23,6 +23,7 @@ type User struct {
 	FullName        string  `sql:"size:255" json:"full_name"`
 	FbId           	string	`json:"fb_id"`
 	GoogleId        string	`json:"google_id"`
+	TwitterId       string	`json:"twitter_id"`
 	LastLogin    	time.Time `json:"last_login"`
 	CreatedDate    	time.Time `json:"created_date"`
 	UpdatedDate    	time.Time `json:"updated_date"`

@@ -21,3 +21,16 @@ func RandSeq(n int) string {
 	}
 	return string(b)
 }
+
+
+//choose first non empty string from the list of arguments
+func ChooseFirstNonEmpty(args ... string) string{
+	for i := range(args){
+		if(len(args[i]) != 0){
+			return args[i];
+		}
+	}
+
+	//otherwise, return empty string
+	return "";
+}

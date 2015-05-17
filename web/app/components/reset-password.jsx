@@ -1,9 +1,3 @@
-// For debugging in the browser
-if (process.env.NODE_ENV !== 'production' &&
-    require('react/lib/ExecutionEnvironment').canUseDOM) {
-    window.React = require('react');
-}
-
 /**
  * Application Entry
  */
@@ -13,11 +7,13 @@ var addons = require('react-addons');
 var ValidationMixin = require('react-validation-mixin');
 var Joi = require('joi');
 var cx = require('react/lib/cx');
+var superagent = require("superagent");
+var Q = require("q");
+var pathToRegexp = require('path-to-regexp')
 
-var AccountActivation = React.createClass({
+var ResetPassword = React.createClass({
     mixins: [ValidationMixin, addons.LinkedStateMixin],
     validatorTypes:  {
-        email: Joi.string().email().label('Email Address'),
         password: Joi.string().regex(/[a-zA-Z0-9]{3,30}/).label('Password'),
         verifyPassword: Joi.any().valid(Joi.ref('password')).required().label('Password Confirmation')
     },
@@ -26,7 +22,7 @@ var AccountActivation = React.createClass({
             email: null,
             password: null,
             verifyPassword: null,
-            activateSuccess: false
+            resetSuccess: false
         };
     },
     componentDidMount: function() {
@@ -53,6 +49,8 @@ var AccountActivation = React.createClass({
     },
     handleSubmit: function(event) {
         event.preventDefault();
+        var that = this;
+
         var onValidate = function(error, validationErrors) {
             if (error) {
                 this.setState({
@@ -61,6 +59,36 @@ var AccountActivation = React.createClass({
             } else {
                 //now post to server to register
                 console.log("Current state", this.state);
+                var keys = []
+                var re = pathToRegexp('/resetPassword/:key', keys)
+
+                var match = re.exec(window.location.pathname)
+                if(match.length < 2){
+                    return that.setState({feedback: "Missing reset password key"})
+                }
+
+                var resetKey = match[1].split("?")[0];
+
+                console.log("Current state", this.state);
+
+                Q.ninvoke(superagent.post("/api/user/resetPassword/" + resetKey)
+                    .query({
+                        newPassword: that.state.password
+                    })
+                    .set('Accept', 'application/json'), "end")
+                    .then(function(response){
+                        var body = response.body;
+                        if(body.status === "success"){
+                            console.log("Reset successfully", body.data);
+
+                            //TODO: now redirect to the home page or any redirectUrl page; or just show successful page
+                            that.setState({resetSuccess: true})
+                        }
+                        else
+                        {
+                            that.setState({feedback : body.errors || "Unable to activate the account. Please try again later."});
+                        }
+                    })
             }
         }.bind(this);
         this.validate(onValidate);
@@ -70,12 +98,12 @@ var AccountActivation = React.createClass({
 
         return (
             <div>
-                <form className="form-vertical forget-form"
-                    name="accountActivationForm" method="post" role="form" onSubmit={this.handleSubmit}>
-                    <h3 className="primary-text bold"> Account Activation</h3>
+                <form name="resetPasswordForm" className="form-vertical forget-form" onSubmit={this.handleSubmit}>
+
+                    <h3 className="primary-text bold">Reset Password ?</h3>
 
                     <div className={cx({
-                            'hidden': !that.state.feedback,
+                            'hidden': !that.state.feedback || !!that.state.resetSuccess,
                             'alert':1, 'alert-danger': 1
                         })}>
                         <i className="fa fa-info-circle info"></i>
@@ -83,28 +111,27 @@ var AccountActivation = React.createClass({
                     </div>
 
                     <div className={cx({
-                            'hidden': !that.state.activateSuccess,
+                            'hidden': !that.state.resetSuccess,
                             'row alert alert-info password-reset-sent': 1
                         })}>
                         <i className="fa fa-info-circle info"></i>
-                        Your account has been successfully activated. Click
-                        <a href="/login"><strong>here</strong></a> to go to the login page.
+                        Your password has been successfully reset. Click
+                        <a href="/login"><strong> here</strong></a> to go to the login page.
                     </div>
 
-                        <span className={cx({
-                            'hidden': !!that.state.activateSuccess
+                    <span className={cx({
+                            'hidden': !!that.state.resetSuccess
                         })}>
                         <p>
-                            Enter your desired password to activate
+                            Please enter your new password.
                         </p>
 
                         <div className={this.getClasses('password')}>
                             <input className="form-control"
                                    type="password" autocomplete="off"
-                                   placeholder="Password"
-                                   name="password" required
+                                   placeholder="Password" name="password" required
                                    valueLink={this.linkState('password')} onBlur={this.handleValidation('password')} />
-                            <span className={cx({
+                             <span className={cx({
                             'hidden': this.getValidationMessages('password').length==0
                             })}>
                                 {["\"Password\" is in incorrect format"].map(this.renderHelpText)}
@@ -117,7 +144,7 @@ var AccountActivation = React.createClass({
                                    placeholder="Re-type Your Password"
                                    valueLink={this.linkState('verifyPassword')} onBlur={this.handleValidation('verifyPassword')}
                                    name="confirmPassword" required/>
-                            <span className={cx({
+                             <span className={cx({
                                 'hidden': this.getValidationMessages('verifyPassword').length==0
                                  })}>
                                 {["\"Password\" does not match"].map(this.renderHelpText)}
@@ -125,18 +152,19 @@ var AccountActivation = React.createClass({
                         </div>
 
                         <div className="form-actions">
+                            <a type="button" href="/login" className="btn btn-default">BACK</a>
                             <button type="submit"
-                                    className="btn btn-main uppercase pull-right">Activate</button>
+                                    className="btn btn-main uppercase pull-right">Submit</button>
                         </div>
                     </span>
+
+                    <div className="bottom-bar"> </div>
                 </form>
+
             </div>
         );
     }
 });
 
-//for-now, always run in browser so it might be not necessary
-if (ExecutionEnvironment.canUseDOM) {
-    var rootElement = document.getElementById("react-root");
-    React.render(AccountActivation(), rootElement);
-}
+module.exports = ResetPassword;
+
