@@ -43,12 +43,12 @@ func (c App) Home() revel.Result {
 
 //normal login flow
 func (c App) Login() revel.Result {
-	return c.RenderTemplate("Login/Login.html")
+	return c.RenderReactTemplate("render/login", "Login/Login.html")
 }
 
 //normal register
 func (c App) Register() revel.Result {
-	return c.RenderTemplate("Register/Register.html")
+	return c.RenderReactTemplate("render/register", "Register/Register.html")
 }
 
 //account activation
@@ -102,12 +102,12 @@ func (c App) Activation() revel.Result {
 
 //type new password using the password reset link
 func (c App) ResetPassword() revel.Result {
-	return c.RenderTemplate("ResetPassword/ResetPassword.html")
+	return c.RenderReactTemplate("render/resetPassword", "ResetPassword/ResetPassword.html")
 }
 
 //ask password to be sent
 func (c App) ForgotPassword() revel.Result {
-	return c.RenderTemplate("ForgotPassword/ForgotPassword.html")
+	return c.RenderReactTemplate("render/forgotPassword", "ForgotPassword/ForgotPassword.html")
 }
 
 //login using twitter

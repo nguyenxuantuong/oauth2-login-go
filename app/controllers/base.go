@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"time"
 	"github.com/mrjones/oauth"
+	"github.com/parnurzeal/gorequest"
+	"encoding/json"
+	"html/template"
 )
 
 //For now, base controller is just an extension of revel controller
@@ -40,9 +43,30 @@ func (c BaseController) RenderInternalServerError() revel.Result {
 	return c.RenderTemplate("errors/500.html")
 }
 
+//render react templates
+func (c BaseController) RenderReactTemplate(nodejsPath string, revelPath string) revel.Result {
+	//request to get content from nodejs server
+	_, body, err := nodeHttpAgent.Get(nodeHttpServerUrl + "/" + nodejsPath).End()
+
+	//fall-back to using go render directly
+	if err != nil {
+		return c.RenderTemplate(revelPath)
+	}
+
+	var profile map[string]interface{}
+	if err := json.Unmarshal([]byte(body), &profile); err != nil {
+		return c.RenderBadRequest(err)
+	}
+
+	c.RenderArgs["Markup"] = template.HTML(profile["data"].(string));
+	return c.RenderTemplate(revelPath);
+}
+
 var (
 	SessionExpire time.Duration //default configuration -- keep time when session expired
 	WebURL string
+	nodeHttpServerUrl string
+	nodeHttpAgent *gorequest.SuperAgent
 )
 
 //TODO: remove this -- using redis instead -- don't have time to do it now
@@ -64,7 +88,15 @@ func Init(){
 
 	SessionExpire = expireAfterDuration
 	WebURL, _ = revel.Config.String("http.weburl")
-	
+
+	var ok bool
+
+	if nodeHttpServerUrl, ok = revel.Config.String("http.nodeserver"); !ok {
+		revel.ERROR.Println("Missing NodeJS http server endpoint")
+	}
+
+	nodeHttpAgent = gorequest.New()
+
 	//init db connections
 	InitDB()
 	InitRedis()
