@@ -5,7 +5,7 @@
 module:testrunner
 
 # static router -- rendered html page
-GET     /                                               App.Index
+GET     /                                               App.Home
 GET     /home                                           App.Home
 GET     /login                                          App.Login
 GET     /register                                       App.Register

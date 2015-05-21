@@ -16,18 +16,22 @@
     "object-assign": "^1.0.0",
     "path-to-regexp": "^1.1.1",
     "q": "^1.1.2",
-    "react": "^0.12.0",
+    "react": "^0.13.3",
     "react-addons": "^0.9.1-deprecated",
+    "react-router": "^0.13.3",
     "react-validation-mixin": "^4.0.4",
     "route-builder": "0.0.1",
     "superagent": "^0.21.0"
   },
   "devDependencies": {
+    "babelify": "^6.1.1",
     "browserify": "^6.2.0",
     "envify": "^3.0.0",
+    "gulp": "^3.8.11",
     "jest-cli": "~0.1.17",
     "reactify": "^0.15.2",
     "uglify-js": "~2.4.15",
+    "vinyl-source-stream": "^1.1.0",
     "watchify": "^2.1.1"
   },
   "scripts": {
@@ -37,6 +41,7 @@
     "build-forgot": "browserify app/forgot-password.js --standalone Application --debug --outfile ../public/js/forgot-password.js",
     "build-reset": "browserify app/reset-password.js --standalone Application --debug --outfile ../public/js/reset-password.js",
     "build-all-login": "npm run build-login && npm run build-register && npm run build-forgot && npm run build-reset",
+    "build-cms": "browserify app/cms/app.js --standalone Application --debug --outfile ../public/js/cms.js",
     "test": "jest"
   },
   "author": "Stanley",

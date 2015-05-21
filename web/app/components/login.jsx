@@ -147,13 +147,13 @@ var Login = React.createClass({
                         <h4>Or login with</h4>
                         <ul className="social-icons">
                             <li>
-                                <a className="social-icon-color facebook" data-original-title="facebook" href="/facebook/login"></a>
+                                <a className="social-icon-color facebook" data-original-title="Facebook" href="/facebook/login"></a>
                             </li>
                             <li>
                                 <a className="social-icon-color twitter" data-original-title="Twitter" href="/twitter/login"></a>
                             </li>
                             <li>
-                                <a className="social-icon-color googleplus" data-original-title="Goole Plus" href="/google/login"></a>
+                                <a className="social-icon-color googleplus" data-original-title="Google Plus" href="/google/login"></a>
                             </li>
                         </ul>
                     </div>
