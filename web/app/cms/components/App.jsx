@@ -50,7 +50,7 @@ class AppHeaderMenu extends React.Component {
                    <div className="hor-menu ">
                        <ul className="nav navbar-nav">
                            <li className="active">
-                               <a>Dashboard</a>
+                               <Link to="dashboard">Dashboard</Link>
                            </li>
 
                            <li className="menu-dropdown classic-menu-dropdown ">
@@ -59,10 +59,10 @@ class AppHeaderMenu extends React.Component {
                                </a>
                                <ul className="dropdown-menu pull-left">
                                    <li className="dropdown">
-                                       <a>
+                                       <Link to="createSSOClient">
                                            <i className="icon-briefcase"></i>
                                            SSO Client
-                                       </a>
+                                       </Link>
                                    </li>
                                </ul>
                            </li>
@@ -73,16 +73,16 @@ class AppHeaderMenu extends React.Component {
                                </a>
                                <ul className="dropdown-menu pull-left">
                                    <li className="dropdown">
-                                       <a>
+                                       <Link to="searchSSOClients">
                                            <i className="icon-briefcase"></i>
                                            SSO Client
-                                       </a>
+                                       </Link>
                                    </li>
                                    <li className="dropdown">
-                                       <a>
+                                       <Link to="searchUsers">
                                            <i className="icon-briefcase"></i>
                                            Users
-                                       </a>
+                                       </Link>
                                    </li>
                                </ul>
                            </li>
@@ -104,7 +104,11 @@ class App extends React.Component {
                     <AppHeaderMenu />
                 </div>
 
-                <RouteHandler/>
+                <div className="page-content content-inner-page" xmlns="http://www.w3.org/1999/html">
+                    <div className="container">
+                        <RouteHandler/>
+                    </div>
+                </div>
             </div>
         )
     }

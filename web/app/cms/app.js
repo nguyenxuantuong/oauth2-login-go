@@ -20,13 +20,16 @@ var AppConstants = require('./constants/AppConstants');
 var LayoutConfig = AppConstants.LayoutConfig;
 
 var Router = require('react-router');
-var { Route, RouteHandler, Link } = Router;
+var { Route, DefaultRoute, RouteHandler, Link } = Router;
 
 //global route applications
 var routes = (
     <Route handler={App}>
-        <Route path="dashboard" handler={Dashboard}/>
-        <Route path="ssoclient/create" handler={CreateSSOClient}/>
+        <DefaultRoute name="index" handler={Dashboard}/>
+        <Route name="dashboard" path="dashboard" handler={Dashboard}/>
+        <Route name="createSSOClient" path="ssoclient/create" handler={CreateSSOClient}/>
+        <Route name="searchSSOClients" path="ssoclient/search" handler={Dashboard}/>
+        <Route name="searchUsers" path="user/search" handler={Dashboard}/>
     </Route>
 );
 
