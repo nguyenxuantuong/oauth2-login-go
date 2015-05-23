@@ -16,6 +16,7 @@ var Login = require("./../web/app/components/login.jsx")
 var Register = require("./../web/app/components/register.jsx")
 var ForgotPassword = require("./../web/app/components/forgot-password.jsx")
 var ResetPassword = require("./../web/app/components/reset-password.jsx")
+var Config = require("./config")
 
 //kao-router
 var Router 		= require('koa-router');
@@ -31,7 +32,12 @@ app.use(logger())
 
 //redis session store
 app.use(session({
-    store: redisStore()
+    store: redisStore({
+        host: Config.Redis.host,
+        port: Config.Redis.port,
+        db: Config.Redis.db,
+        pass: Config.Redis.pass
+    })
 }));
 
 //static files

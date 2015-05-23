@@ -9,5 +9,6 @@ public/js
 web/node_modules
 *npm-debug.log
 nodejs/node_modules
+nodejs/config.js
 .idea
 conf/app.conf
