@@ -10,3 +10,4 @@ web/node_modules
 *npm-debug.log
 nodejs/node_modules
 .idea
+conf/app.conf

@@ -13,6 +13,9 @@ var JSX     = require('node-jsx').install({extension: '.jsx'});
 
 //some react component
 var Login = require("./../web/app/components/login.jsx")
+var Register = require("./../web/app/components/register.jsx")
+var ForgotPassword = require("./../web/app/components/forgot-password.jsx")
+var ResetPassword = require("./../web/app/components/reset-password.jsx")
 
 //kao-router
 var Router 		= require('koa-router');
@@ -56,7 +59,43 @@ router.get("/render/login", function*(){
         React.createElement(Login, {})
     );
 
-    this.body = markup;
+    this.body = {
+        success: true,
+        data: markup
+    };
+})
+
+router.get("/render/register", function*(){
+    var markup = React.renderToString(
+        React.createElement(Register, {})
+    );
+
+    this.body = {
+        success: true,
+        data: markup
+    };
+})
+
+router.get("/render/resetPassword", function*(){
+    var markup = React.renderToString(
+        React.createElement(ResetPassword, {})
+    );
+
+    this.body = {
+        success: true,
+        data: markup
+    };
+})
+
+router.get("/render/forgotPassword", function*(){
+    var markup = React.renderToString(
+        React.createElement(ForgotPassword, {})
+    );
+
+    this.body = {
+        success: true,
+        data: markup
+    };
 })
 
 //main routes + handlers
