@@ -7,7 +7,8 @@
   "dependencies": {
     "async": "^0.9.0",
     "crypto-js": "^3.1.4",
-    "flux": "^2.0.0",
+    "events": "^1.0.2",
+    "flux": "^2.0.3",
     "htmlescape": "^1.0.0",
     "keymirror": "~0.1.0",
     "lodash-node": "^2.4.1",
@@ -18,14 +19,18 @@
     "q": "^1.1.2",
     "react": "^0.13.3",
     "react-addons": "^0.9.1-deprecated",
+    "react-pure-render": "^1.0.1",
     "react-router": "^0.13.3",
     "react-validation-mixin": "^4.0.4",
     "route-builder": "0.0.1",
-    "superagent": "^0.21.0"
+    "selectn": "^0.9.6",
+    "superagent": "^0.21.0",
+    "underscore": "^1.8.3"
   },
   "devDependencies": {
-    "babelify": "^6.1.1",
+    "babelify": "^6.1.2",
     "browserify": "^6.2.0",
+    "core-js": "^0.9.13",
     "envify": "^3.0.0",
     "gulp": "^3.8.11",
     "gulp-uglify": "^1.2.0",
@@ -33,7 +38,8 @@
     "reactify": "^0.15.2",
     "uglify-js": "~2.4.15",
     "vinyl-source-stream": "^1.1.0",
-    "watchify": "^2.1.1"
+    "watchify": "^2.1.1",
+    "whatwg-fetch": "^0.8.2"
   },
   "scripts": {
     "build-login": "browserify app/login.js --standalone Application --debug --outfile ../public/js/login.js",

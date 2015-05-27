@@ -23,6 +23,12 @@ POST    /api/user/register                              Auth.Register
 POST    /api/user/login                                 Auth.Login
 POST    /api/user/logout                                Auth.Logout
 
+# user information
+GET     /api/user/list                                  UserController.GetUserList
+GET     /api/user/:id/info                              UserController.GetUserInfo
+PUT     /api/user/:id                                   UserController.UpdateUserInfo
+
+
 # activate account
 POST    /api/user/activateAccount/:activationKey        Auth.ActivateAccount
 

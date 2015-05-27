@@ -15,7 +15,7 @@ class AppHeaderTop extends React.Component {
             <div className="page-header-top">
                 <div className="container">
                     <div className="page-logo">
-                        <img src="/public/img/logo-oauth-io-2.jpg" alt="Oauth logo"/>
+                        <img src="/public/img/metronic-logo-light.png" alt="Oauth logo"/>
                     </div>
                     <a href="javascript:;" className="menu-toggler"></a>
                     <div className="top-menu">
@@ -105,9 +105,7 @@ class App extends React.Component {
                 </div>
 
                 <div className="page-content content-inner-page" xmlns="http://www.w3.org/1999/html">
-                    <div className="container">
-                        <RouteHandler/>
-                    </div>
+                    <RouteHandler/>
                 </div>
             </div>
         )

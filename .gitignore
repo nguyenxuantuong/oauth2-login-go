@@ -12,3 +12,4 @@ nodejs/node_modules
 nodejs/config.js
 .idea
 conf/app.conf
+*dump.rdb

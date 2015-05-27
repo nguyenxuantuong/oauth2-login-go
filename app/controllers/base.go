@@ -8,6 +8,8 @@ import (
 	"github.com/parnurzeal/gorequest"
 	"encoding/json"
 	"html/template"
+	"strconv"
+	"errors"
 )
 
 //For now, base controller is just an extension of revel controller
@@ -19,7 +21,17 @@ type BaseController struct {
 type Response struct {
 	Status string `json:"status"`
 	Data   interface{} `json:"data"`
-	Errors	interface {} `json:"errors"`
+	Errors	interface {} `json:"errors,omitempty"`
+}
+
+type PaginatedData struct {
+	Total int `json:"total"`
+	Results interface{} `json:"results"`
+}
+
+type PaginatedParams struct {
+	Limit int `json:"limit"`
+	Offset int `json:"offset"`
 }
 
 //sugar function to be shared among other controllers
@@ -32,6 +44,12 @@ func (c BaseController) RenderJsonSuccess(data interface {}) revel.Result {
 	return c.RenderJson(Response{Status: "success", Data: data})
 }
 
+//return paginated json data
+func (c BaseController) RenderPaginatedJsonSuccess(data interface {}, total int) revel.Result {
+	dataResponse := PaginatedData{Total: total, Results: data}
+	return c.RenderJson(Response{Status: "success", Data: dataResponse})
+}
+
 //bad request unknown error page
 func (c BaseController) RenderBadRequest(error interface {}) revel.Result {
 	revel.ERROR.Println(error)
@@ -41,6 +59,34 @@ func (c BaseController) RenderBadRequest(error interface {}) revel.Result {
 
 func (c BaseController) RenderInternalServerError() revel.Result {
 	return c.RenderTemplate("errors/500.html")
+}
+
+func (c *BaseController) GetPaginationParams() (PaginatedParams, error) {
+	var limit_ string = c.Params.Get("limit");
+	var offset_ string = c.Params.Get("offset");
+
+	outParams := PaginatedParams{}
+
+	if limit_ == "" || offset_ == "" {
+		return outParams, errors.New("Missing limit and offset")
+	}
+
+	var limit int;
+	var offset int;
+	var err error;
+
+	if limit, err = strconv.Atoi(limit_); err != nil {
+		return outParams, errors.New("Limit parameter must be a number")
+	}
+
+	if offset, err = strconv.Atoi(offset_); err != nil {
+		return outParams, errors.New("Offset parameter must be a number")
+	}
+
+	outParams.Limit = limit;
+	outParams.Offset = offset;
+
+	return outParams, nil
 }
 
 //render react templates

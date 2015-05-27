@@ -1865,7 +1865,8 @@ Page Footer
   background: #f37c50; }
 
 .page-logo img {
-  margin-top: 1px; }
+  margin-top: 26px;
+  height: 23px; }
 
 .feeds li.notification {
   cursor: pointer; }
