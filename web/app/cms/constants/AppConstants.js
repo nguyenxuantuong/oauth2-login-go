@@ -6,7 +6,11 @@ module.exports = {
         APP_INITIALIZE: null,
         APP_RESET: null,
         SWITCH_PAGE: null, //change page eg. HOME -> DETAIL
-        CHANGE_PAGE: null
+        CHANGE_PAGE: null,
+
+        GET_USERS: null,
+        GET_USERS_SUCCESS: null,
+        GET_USERS_ERROR: null
     }),
 
     Pages: keyMirror({

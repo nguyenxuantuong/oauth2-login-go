@@ -13,6 +13,7 @@ var React = require('react');
 var App = require('./components/App.jsx');
 var Dashboard = require('./components/Dashboard.jsx');
 var CreateSSOClient = require('./components/CreateSSOClient.jsx');
+var UserSearchPage = require('./components/UserSearchPage.jsx');
 
 var AppActions = require('./actions/AppActions');
 var AppConstants = require('./constants/AppConstants');
@@ -29,7 +30,7 @@ var routes = (
         <Route name="dashboard" path="dashboard" handler={Dashboard}/>
         <Route name="createSSOClient" path="ssoclient/create" handler={CreateSSOClient}/>
         <Route name="searchSSOClients" path="ssoclient/search" handler={Dashboard}/>
-        <Route name="searchUsers" path="user/search" handler={Dashboard}/>
+        <Route name="searchUsers" path="user/search" handler={UserSearchPage}/>
     </Route>
 );
 
