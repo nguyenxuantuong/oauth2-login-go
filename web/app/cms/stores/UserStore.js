@@ -1,31 +1,38 @@
 import { register } from '../AppDispatcher';
 import { createStore, mergeIntoBag, isInBag } from '../utils/StoreUtils';
 import selectn from 'selectn';
+import AppConstants from '../constants/AppConstants';
 
-const _users = {};
+var _searchUserArray = [];
+var _searchUserLoading = false;
 
 const UserStore = createStore({
-  contains(login, fields) {
-    return isInBag(_users, login, fields);
-  },
-
-  get(login) {
-    return _users[login];
-  },
-
-  getAll() {
-    return _users
-  }
+    getSearchUserArray() {
+        return _searchUserArray;
+    },
+    getSearchUserLoading() {
+        return _searchUserLoading;
+    }
 });
 
 UserStore.dispatchToken = register(action => {
-  console.log("dispatch token", action);
-  UserStore.emitChange();
-  //const responseUsers = selectn('response.entities.users', action);
-  //if (responseUsers) {
-  //  mergeIntoBag(_users, responseUsers);
-  //  UserStore.emitChange();
-  //}
+    let actionType = selectn('type', action);
+
+    //depend on action type; get the data from action
+    switch (actionType) {
+        case AppConstants.ActionTypes.GET_USERS:
+            _searchUserLoading = true;
+            break;
+
+        case AppConstants.ActionTypes.GET_USERS_SUCCESS:
+            _searchUserArray = selectn('response.results', action) || [];
+            _searchUserLoading = false;
+        default:
+            break;
+    }
+
+    //then emit the event to notify the changes
+    UserStore.emitChange();
 });
 
 export default UserStore;

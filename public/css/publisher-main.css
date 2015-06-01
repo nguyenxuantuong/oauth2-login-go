@@ -1876,6 +1876,14 @@ Page Footer
 .form-actions .input-group-btn .btn, .form-body .input-group-btn .btn {
   border-radius: 0px !important; }
 
+.spinner-loading {
+  font-size: 50px;
+  min-height: 400px;
+  line-height: 400px; }
+
+.text-center {
+  text-align: center; }
+
 .required-label:before {
   color: #f00;
   content: "*"; }
@@ -2035,68 +2043,12 @@ Page Footer
 @media (max-width: 500px) {
   .page-logo {
     display: none !important; } }
-.upload-zone {
-  margin: 11px auto 20px;
-  height: 100px;
-  border-radius: 3px;
-  background: #fff;
-  border: 2px dashed #c8c8c8;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-  text-align: center; }
-  .upload-zone.exist-item {
-    border: 2px solid #ccc; }
-  .upload-zone .main-message {
-    margin-top: 20px; }
-  .upload-zone .glyphicon.glyphicon-cloud,
-  .upload-zone .fa.fa-upload {
-    line-height: 94px;
-    font-size: 68px;
-    margin-left: -10px; }
-    .upload-zone .glyphicon.glyphicon-cloud.small-icon-upload-block,
-    .upload-zone .fa.fa-upload.small-icon-upload-block {
-      position: absolute;
-      right: 10px;
-      font-size: 25px;
-      line-height: normal;
-      margin-left: auto; }
-
-.upload-block-item-thumb {
-  max-height: 95px;
-  height: 95px;
-  float: left; }
-  .upload-block-item-thumb img {
-    max-height: 95px; }
-  .upload-block-item-thumb .ribbon {
-    padding: 2px 5px;
-    border-radius: 4px;
-    position: absolute;
-    bottom: 2px;
-    font-size: 13px;
-    color: white; }
-    .upload-block-item-thumb .ribbon.published {
-      background: #53d76a;
-      left: 13px; }
-    .upload-block-item-thumb .ribbon.on-scheduled {
-      background: #ffcc00;
-      left: 2px; }
-    .upload-block-item-thumb .ribbon.not-published {
-      background: #ff5064;
-      color: white;
-      left: 2px; }
-
 .switch-light {
   display: inline-block;
   margin-left: 10px;
   margin-bottom: -10px; }
   .switch-light > span:before {
     height: 30px !important; }
-
-.progress-block {
-  border: 1px solid #e3e3e3;
-  box-sizing: border-box;
-  padding: 10px 20px;
-  margin-top: 10px; }
 
 .form-control.date-picker {
   width: auto;
