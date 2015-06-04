@@ -35,7 +35,7 @@ The default directory structure of a generated Revel application:
 
 app
 
-    The app directory contains the source code and templates for your application.
+   The app directory contains the source code and templates for your application.
 
 conf
 
