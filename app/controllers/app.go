@@ -41,8 +41,23 @@ func (c App) Home() revel.Result {
 	return c.RenderTemplate("Home/Home.html")
 }
 
+//render application error
+func (c App) LoginError(title string, description string) revel.Result {
+	c.RenderArgs["Title"] = title;
+	c.RenderArgs["Description"] = description;
+	//when there is login error; we clear the session inside redis
+	var sessionKey string
+	sessionKey = "s:user_"+c.Session.Id()
+
+	RCache.Delete(sessionKey)
+
+	return c.RenderTemplate("errors/application-error.html")
+}
+
 //normal login flow
-func (c App) Login() revel.Result {
+func (c App) Login(client_id string, redirect_url string, response_type string, register_redirect string) revel.Result {
+	c.SetSSOClientInformation(client_id, redirect_url, response_type, register_redirect)
+
 	return c.RenderReactTemplate("render/login", "Login/Login.html")
 }
 
@@ -52,7 +67,7 @@ func (c App) Register() revel.Result {
 }
 
 //account activation
-func (c App) Activation() revel.Result {
+func (c App) Activation(client_id string, redirect_url string, response_type string, register_redirect string) revel.Result {
 	var activationKey = c.Params.Get("activationKey");
 
 	//check if activation key exist
@@ -96,8 +111,9 @@ func (c App) Activation() revel.Result {
 		return c.RenderInternalServerError()
 	}
 
-	//TODO: if there is redirect url; redirect him back to the main app; otherwise, log him in the Oauth CMS
-	return c.Redirect(App.Home)
+	c.SetSSOClientInformation(client_id, redirect_url, response_type, register_redirect)
+
+	return c.RedirectAfterLoginSuccess(App.Home, register_redirect)
 }
 
 //type new password using the password reset link
@@ -203,8 +219,7 @@ func (c App) LoginByTwitter() revel.Result {
 			//logged user in directly
 			RCache.Set(sessionKey, users[0], SessionExpire)
 
-			//TODO: check redirect URL; if not redirect user into home page of Oath CMS
-			return c.Redirect(App.Home)
+			return c.RedirectAfterLoginSuccess(App.Home)
 		} else {
 			//if user haven't activated account before, we show the bad request instead
 			return c.RenderBadRequest(err)
@@ -230,9 +245,7 @@ func (c App) LoginByTwitter() revel.Result {
 
 	//set the cache of the users
 	RCache.Set(sessionKey, newUser, SessionExpire)
-
-	//TODO: if there is redirect url; redirect him back to the main app; otherwise, log him in the Oauth CMS
-	return c.Redirect(App.Home)
+	return c.RedirectAfterLoginSuccess(App.Home)
 }
 
 //login using facebook
@@ -327,7 +340,7 @@ func (c App) LoginByFacebook() revel.Result {
 			RCache.Set(sessionKey, users[0], SessionExpire)
 
 			//TODO: check redirect URL; if not redirect user into home page of Oath CMS
-			return c.Redirect(App.Home)
+			return c.RedirectAfterLoginSuccess(App.Home)
 		} else {
 			//if user haven't activated account before, we show the bad request instead
 			return c.RenderBadRequest(err)
@@ -355,7 +368,7 @@ func (c App) LoginByFacebook() revel.Result {
 	RCache.Set(sessionKey, newUser, SessionExpire)
 
 	//TODO: if there is redirect url; redirect him back to the main app; otherwise, log him in the Oauth CMS
-	return c.Redirect(App.Home)
+	return c.RedirectAfterLoginSuccess(App.Home)
 }
 
 func (c App) LoginByGoogle() revel.Result {
@@ -454,7 +467,7 @@ func (c App) LoginByGoogle() revel.Result {
 			RCache.Set(sessionKey, users[0], SessionExpire)
 
 			//TODO: check redirect URL; if not redirect user into home page of Oath CMS
-			return c.Redirect(App.Home)
+			return c.RedirectAfterLoginSuccess(App.Home)
 		} else {
 			//if user haven't activated account before, we show the bad request instead
 			return c.RenderBadRequest(err)
@@ -481,9 +494,7 @@ func (c App) LoginByGoogle() revel.Result {
 	//set the cache of the users
 	RCache.Set(sessionKey, newUser, SessionExpire)
 
-
-	//TODO: if there is redirect url; redirect him back to the main app; otherwise, log him in the Oauth CMS
-	return c.Redirect(App.Home)
+	return c.RedirectAfterLoginSuccess(App.Home)
 }
 
 

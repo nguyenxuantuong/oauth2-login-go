@@ -12,6 +12,7 @@ GET     /register                                       App.Register
 GET     /activation/:activationKey                      App.Activation
 GET     /resetPassword/:resetKey                        App.ResetPassword
 GET     /forgotPassword                                 App.ForgotPassword
+GET     /loginError                                     App.LoginError
 
 # third-party oauth2 integration
 GET     /facebook/login                                 App.LoginByFacebook
@@ -56,6 +57,7 @@ POST 	/api/user/userInfo								Auth.UserInfo
 #OATH handler
 GET 	/api/oauth/authorize							Oauth.Authorize
 * 	    /api/oauth/token								Oauth.AccessToken
+GET     /api/oauth/verifyToken                          Oauth.VerifyToken
 
 # Ignore favicon requests
 GET     /favicon.ico                                404

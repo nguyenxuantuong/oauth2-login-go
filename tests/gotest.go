@@ -2,13 +2,14 @@
 package tests
 
 import (
-	"github.com/revel/revel"
+//	"github.com/revel/revel"
 	"fmt"
 	"encoding/json"
 	"bytes"
 	"strings"
 	"unsafe"
 	"sort"
+	"github.com/revel/revel/testing"
 )
 
 var _ = fmt.Printf
@@ -16,7 +17,7 @@ var _  = bytes.Index
 var _ = strings.Index
 
 type GoTest struct {
-	revel.TestSuite
+	testing.TestSuite
 }
 
 //FEATURE: Declare struct in GO

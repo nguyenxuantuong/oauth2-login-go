@@ -13,6 +13,7 @@ import (
 	"math"
 	"net/http"
 	"strings"
+	"github.com/revel/revel/testing"
 )
 
 var _ = fmt.Printf
@@ -27,7 +28,7 @@ var (
 )
 
 type UserTest struct {
-	revel.TestSuite
+	testing.TestSuite
 }
 
 //some sugar function for testing easily

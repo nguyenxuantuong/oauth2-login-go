@@ -5,12 +5,13 @@ import (
 	"auth/app/emails"
 //	"github.com/revel/revel/cache"
 	"fmt"
+	"github.com/revel/revel/testing"
 )
 
 var _ = fmt.Printf
 
 type AppTest struct {
-	revel.TestSuite
+	testing.TestSuite
 }
 
 func (t *AppTest) Before() {

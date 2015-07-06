@@ -23,6 +23,12 @@ var (
 	OAuthServer *osin.Server
 )
 
+const (
+	AuthorizationCode = 1
+	AccessToken = 2
+	RefreshToken = 3
+)
+
 func InitOAuthServer(){
 	sconfig := osin.NewServerConfig()
 	
@@ -37,7 +43,8 @@ func InitOAuthServer(){
 }
 
 //handler to authorize request; it will redirect the users to obtain either authorize_token or access_token
-func (c OAuth) Authorize() revel.Result {
+//NOTE: this is mainly for web flow
+func (c OAuth) Authorize(client_id string, redirect_url string, response_type string, register_redirect string) revel.Result {
 	//create resp object and defer close
 	resp := OAuthServer.NewResponse()
 	defer resp.Close()
@@ -60,10 +67,18 @@ func (c OAuth) Authorize() revel.Result {
 			ar.Authorized = true
 			
 			//TODO: if you want to save userdata -- do it here; put into ar object which will be saved into storage
+			ar.UserData = sessionUser.Sanitize();
+
+			//TODO: every redirect url need to be compared with the registered redirect url to make sure it have the same host
+			//in case, we need to redirect to register url instead
+			if redirect_url != "" {
+				ar.RedirectUri = redirect_url
+			}
+
 			//we will alway force redirect using redirect url
 			OAuthServer.FinishAuthorizeRequest(resp, req, ar)
 		} else {
-			return c.Redirect(routes.App.Login() + "?" + c.Params.Query.Encode())
+			return c.Redirect(routes.App.Login(client_id, redirect_url, response_type, register_redirect))
 		}
 	}
 
@@ -72,7 +87,39 @@ func (c OAuth) Authorize() revel.Result {
 	return nil
 }
 
+//verify if authorization code / access code is valid
+//this is for the other server to verify if the accessToken it received is credential or not
+func (c OAuth) VerifyToken(code string, codeType int) revel.Result {
+	if codeType == AuthorizationCode {
+		//load authorization from the storage
+		authorizeData, error := OAuthServer.Storage.LoadAuthorize(code)
+		if error != nil || authorizeData.IsExpired() {
+			return c.RenderJsonError("authorization code does not exist or has been expired")
+		}
+
+		//otherwise, return the user data
+		return c.RenderJsonSuccess(authorizeData.UserData)
+	} else if codeType == AccessToken {
+		accessData, error := OAuthServer.Storage.LoadAccess(code)
+		if error != nil || accessData.IsExpired() {
+			return c.RenderJsonError("authorization code does not exist or has been expired")
+		}
+	} else if codeType == RefreshToken {
+		refreshData, error := OAuthServer.Storage.LoadRefresh(code)
+		if error != nil || refreshData.IsExpired() {
+			return c.RenderJsonError("authorization code does not exist or has been expired")
+		}
+	} else {
+		return c.RenderJsonError("unknown token type")
+	}
+
+	//if everything ok; just return success
+	var response struct{}
+	return c.RenderJsonSuccess(response)
+}
+
 //exchange for tokens -- it should be called in server side; unless client-side is ssl
+//NOTE: this is mainly for mobile flow
 func (c OAuth) AccessToken() revel.Result {
 	resp := OAuthServer.NewResponse()
 	defer resp.Close()

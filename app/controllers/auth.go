@@ -10,9 +10,11 @@ import (
 	"code.google.com/p/go.crypto/bcrypt"
 	"github.com/jinzhu/gorm"
 	"github.com/parnurzeal/gorequest"
-//	"auth/app/routes"
+	"auth/app/routes"
 	"fmt"
 	"time"
+	"strings"
+//	"github.com/garyburd/redigo/redis"
 )
 
 var _ = fmt.Printf
@@ -83,6 +85,14 @@ func (c Auth) Register() revel.Result {
 		}
 
 		accountActivationLink :=  WebURL + "/activation/" + accountActivation.ActivationKey;
+		//also, need to check all the redirect url, etc inside the session
+		clientInfo := c.GetSSOClientInformation()
+
+		//update the account activation link
+		if(clientInfo["client_id"] != "" && clientInfo["redirect_url"] != "" && clientInfo["response_type"] != "") {
+			accountActivationLink = accountActivationLink + "?client_id=" + clientInfo["client_id"] + "&redirect_url=" + clientInfo["redirect_url"] +
+			"&response_type=" + clientInfo["response_type"] + "&register_redirect=" + clientInfo["register_redirect"] ;
+		}
 		
 		//activation key
 		emailPlaceHolder := emails.EmailPlaceHolder{
@@ -155,16 +165,31 @@ func (c Auth) Login() revel.Result {
 
 	//otherwise, set session in redis
 	RCache.Set(sessionKey, user, SessionExpire)
-	
+
+	//NOTE: this is a bit tricky
+	//check if need to redirect
+	clientInfo := c.GetSSOClientInformation()
+
+	redirectUrl := routes.OAuth.Authorize(clientInfo["client_id"], clientInfo["redirect_url"], clientInfo["response_type"], clientInfo["register_redirect"])
+	//abit of hardcode cause right now redirection is client-side
+	redirectUrl = strings.Replace(redirectUrl, "/OAuth/Authorize", "/api/oauth/authorize", -1)
+
+	type Response struct {
+		Redirect string `json:"redirect"`
+	}
+
+	dataResponse := Response{Redirect: redirectUrl}
+
 	//otherwise; just return response as usual
-	return c.RenderJsonSuccess(user)
+	return c.RenderJsonSuccess(dataResponse)
 }
 
 //logout
 func (c Auth) Logout() revel.Result {
 	var sessionKey string
 	sessionKey = "s:user_"+c.Session.Id()
-	
+
+	//TODO: update delete with prefix instead -- to clear out other things
 	RCache.Delete(sessionKey)
 
 	var response struct{}

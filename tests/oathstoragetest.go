@@ -13,6 +13,7 @@ import (
 //	"net/http"
 //	"net/url"
 	"encoding/json"
+	"github.com/revel/revel/testing"
 )
 
 var _ = fmt.Printf
@@ -20,7 +21,7 @@ var _  = bytes.Index
 var _ = strings.Index
 
 type OAuthStorageTest struct {
-	revel.TestSuite
+	testing.TestSuite
 }
 
 type Client  struct {

@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"auth/app/models"
 	"code.google.com/p/go.crypto/bcrypt"
+	"github.com/revel/revel/testing"
 )
 
 var _ = fmt.Printf
@@ -25,7 +26,7 @@ var _  = bytes.Index
 var _ = strings.Index
 
 type OAuthTest struct {
-	revel.TestSuite
+	testing.TestSuite
 }
 
 var (

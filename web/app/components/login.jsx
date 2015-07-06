@@ -68,8 +68,13 @@ var Login = React.createClass({
                         var body = response.body;
                         if(body.status === "success"){
                             console.log("Register successfully", body.data);
-                            //redirect user into home page
-                            window.location = "/home";
+                            if(body.data && body.data.redirect) {
+                                return window.location = body.data.redirect;
+                            }
+                            else{
+                                //redirect user into home page
+                                window.location = "/home";
+                            }
                         }
                         else
                         {

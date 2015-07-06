@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"strconv"
 	"errors"
+	"auth/app/routes"
 )
 
 //For now, base controller is just an extension of revel controller
@@ -59,6 +60,51 @@ func (c BaseController) RenderBadRequest(error interface {}) revel.Result {
 
 func (c BaseController) RenderInternalServerError() revel.Result {
 	return c.RenderTemplate("errors/500.html")
+}
+
+//get client information -- inside the session
+func (c BaseController) GetSSOClientInformation() map[string]string {
+	clientSessionKey := "s:user_" + c.Session.Id() + ":client"
+	clientInfo := make(map[string]string)
+	RCache.Get(clientSessionKey, &clientInfo)
+	return clientInfo
+}
+
+//get SSO client info
+func (c BaseController) SetSSOClientInformation(client_id string, redirect_url string, response_type string, register_redirect string)  {
+	if(client_id != "" && redirect_url != "" && response_type != ""){
+		//store this inside session so that we can retrieve later
+		var sessionKey string
+		sessionKey = "s:user_" + c.Session.Id() + ":client"
+
+		clientInfo := make(map[string]string)
+		clientInfo["client_id"] = client_id;
+		clientInfo["redirect_url"] = redirect_url;
+		clientInfo["response_type"] = response_type;
+
+		if register_redirect != "" {
+			clientInfo["register_redirect"] = register_redirect;
+		}
+
+		//save into redis
+		RCache.Set(sessionKey, clientInfo, SessionExpire);
+	}
+}
+
+//if redirect_url is provided; using redirect_url instead of the one saving in redis session
+func (c BaseController) RedirectAfterLoginSuccess(fallback  interface{}, args ...string) revel.Result {
+	clientInfo := c.GetSSOClientInformation()
+	if len(args) > 0{
+		clientInfo["redirect_url"] = args[0];
+	}
+	revel.INFO.Println("register redirect", clientInfo["redirect_url"])
+
+	//if there is redirect url; we redirect back to get the authorize token
+	if(clientInfo["client_id"] != "" && clientInfo["redirect_url"] != "" && clientInfo["response_type"] != "") {
+		return c.Redirect(routes.OAuth.Authorize(clientInfo["client_id"], clientInfo["redirect_url"], clientInfo["response_type"], clientInfo["register_redirect"]))
+	}
+
+	return c.Redirect(fallback)
 }
 
 func (c *BaseController) GetPaginationParams() (PaginatedParams, error) {
