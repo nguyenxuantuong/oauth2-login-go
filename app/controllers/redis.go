@@ -9,7 +9,7 @@ import (
 
 var (
 	Rpl *redis.Pool //redis pool connections
-	RCache utils.RedisCache //redis cache instance -- keep pool connection + some seriablization, deserialization sugar methods
+	RCache utils.RedisCache //redis cache instance -- keep pool connection + some serialization, deserialization sugar methods
 )
 
 //this just contain redis connection

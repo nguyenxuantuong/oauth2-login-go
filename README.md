@@ -2,8 +2,13 @@
 
 ## Getting Started
 
-Auth is OATH2 implementation using go language. It is based on Revel -- A high-productivity web framework for the [Go language](http://www.golang.org/).
-Auth aims to a centralized system which every other services system depend on. Think about a centralized system from Google (you access it via accounts.google.com)
+Auth is OATH2/Authentication implementation using go language. 
+It's my hobby project written from scratch first started years ago. 
+It originally is kept as private repo, now I changed it to public.  
+It provides basic login/logout/account activation/session authentication + oauth2 features provided by Osin Go implementation. 
+It can provide good starting point to write Revel goserver and structure the source code. 
+It is based on Revel -- A high-productivity web framework for the [Go language](http://www.golang.org/) with osin Oauth2.
+
 
 ### Start the web server:
 

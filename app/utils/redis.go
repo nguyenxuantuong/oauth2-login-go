@@ -6,6 +6,8 @@ import (
 	"github.com/revel/revel/cache"
 	"time"
 	"errors"
+	_ "log"
+	"encoding/json"
 )
 
 // Length of time to cache an item.
@@ -40,7 +42,20 @@ type RedisCache struct {
 func (c RedisCache) Set(key string, value interface{}, expires time.Duration) error {
 	conn := c.Pool.Get()
 	defer conn.Close()
-	return c.invoke(conn.Do, key, value, expires)
+	if err := c.invoke(conn.Do, key, value, expires); err != nil {
+		return err
+	}
+
+	jsonKey := "j:" + key;
+	valueString, _ := json.Marshal(value)
+	jsonString := string(valueString)
+
+	//also save json-stringify of the object to redis -- so that nodejs can take up the value
+	if err := c.invoke(conn.Do, jsonKey, jsonString, expires); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c RedisCache) Add(key string, value interface{}, expires time.Duration) error {
